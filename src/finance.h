@@ -84,7 +84,7 @@ char* getCurrentMonthPlan(void)
 {
     return getMonthPlan(getCurrentMonth());
 }
-int getCurrentMonthProfit(void)
+char* getCurrentMonthProfit(void)
 {
     return getMonthProfit(getCurrentMonth());
 }
