@@ -1,18 +1,19 @@
 #include <math.h>
 #include <string.h>
-#define TABLE_HEADERS_STRING "ID\tNAME\tREMAINING\tCOST\tREVENUE\tPROFIT\tPROFIT_PROCENT\tCOST_1"
-#define TABLE_HEADERS_STRING_LENGTH 67
-#define NUMBER_OF_HEADERS 8
+#define TABLE_HEADERS_STRING_STACK "ID\tNAME\tREMAINING\tCOST\tREVENUE\tPROFIT\tPROFIT_PROCENT\tCOST_1"
+#define TABLE_HEADERS_STRING_STACK_LENGTH 67
+#define NUMBER_OF_HEADERS_STACK 8
 float getCompleteRevenue(void);
 float getCompleteProfit(void);
 float getCompleteCost(void);
 float getAverageCostOne(void);
 float getCompeleteProfitProcent(void);
 char* searchProductInfo(char *args);
-int addNewProduct(char *name, int remaining, int cost, int revenue, int profit, float profit_procent, int cost_1);
+int addNewProduct(char *name, int remaining, int cost, int revenue, 
+                    int profit, float profit_procent, int cost_1);
 
 
-static const char *headersTable[] = {
+static const char *headersTableStack[] = {
     "ID",
     "Name",
     "Remaining",
@@ -71,7 +72,7 @@ float getCompeleteProfitProcent(void)
 char* getProductIDString(char *name)
 {
     char formatted_command[128] = {0};
-    sprintf(formatted_command, "SELECT product_id, name FROM STACK WHERE name = %s;\0", name);
+    sprintf(formatted_command, "SELECT product_id, name FROM STACK WHERE name = '%s';", name);
     if(sqlite3_complete(name) || !executeReadCommand(formatted_command))
     {
         return NULL;
@@ -88,7 +89,7 @@ int deteleProduct(int product_id)
     {
         return 0;
     }
-    char *formatted_command[128] = {0};
+    char formatted_command[128] = {0};
     sprintf(formatted_command, "DELETE FROM STACK WHERE product_id = %d;\n", product_id);
     return executeWriteCommand(formatted_command);
 }
@@ -99,29 +100,10 @@ char* getMostProfitableProduct(void)
         return NULL;
     }
     char **resultRows = fetchall();
-    char *output = malloc(strlen(TABLE_HEADERS_STRING)+strlen(resultRows[0])+2);
-    sprintf(output, "%s\n%s", TABLE_HEADERS_STRING, resultRows[0]);
+    char *output = malloc(strlen(TABLE_HEADERS_STRING_STACK)+strlen(resultRows[0])+2);
+    sprintf(output, "%s\n%s", TABLE_HEADERS_STRING_STACK, resultRows[0]);
     freeBuffer();
     return output;
-}
-static char** splitString(char *argsIn, int *listArgsSize, const char* determinator)
-{
-    int iter = 0;
-    char buffer[256] = {0};
-    char **outputList = malloc(sizeof(char *) * NUMBER_OF_HEADERS);
-    strncpy(buffer, argsIn,256);
-    char *buffer_ptr = strtok(buffer, determinator);
-    
-    while(buffer_ptr != NULL && iter != NUMBER_OF_HEADERS)
-    {
-        outputList[iter] = malloc(sizeof(char) * (strlen(buffer_ptr)+1));
-        strncpy(outputList[iter], buffer_ptr, strlen(buffer_ptr)+1);
-        buffer_ptr = strtok(NULL, determinator);
-        iter++;
-    }
-    free(buffer_ptr);
-    *listArgsSize = iter;
-    return outputList;
 }
 char* getProductInfo(int id, char *field)
 {
@@ -137,17 +119,38 @@ char* getProductInfo(int id, char *field)
     freeBuffer();
     return output;
 }
+//static char** splitString(char *argsIn, int *listArgsSize, 
+//                            const char* determinator, 
+//                            size_t maxNumberOfStrings)
+//{
+//    int iter = 0;
+//    char buffer[256] = {0};
+//    char **outputList = malloc(sizeof(char *) * maxNumberOfStrings);
+//    strncpy(buffer, argsIn,256);
+//    char *buffer_ptr = strtok(buffer, determinator);
+//    
+//    while(buffer_ptr != NULL && iter != maxNumberOfStrings)
+//    {
+//        outputList[iter] = malloc(sizeof(char) * (strlen(buffer_ptr)+1));
+//        strncpy(outputList[iter], buffer_ptr, strlen(buffer_ptr)+1);
+//        buffer_ptr = strtok(NULL, determinator);
+//        iter++;
+//    }
+//    free(buffer_ptr);
+//    *listArgsSize = iter;
+//    return outputList;
+//}
 char* searchProductInfo(char *args)
 {
     int listArgsSize = 0; 
     char command[512] = "SELECT product_id, name, remaining, cost, revenue, profit, profit_procent, cost_1 FROM STACK WHERE ";
-    char **fields = splitString(args, &listArgsSize, " =");
+    char **fields = splitString(args, &listArgsSize, " =", NUMBER_OF_HEADERS_STACK);
     if(!fieldsAreNotSQLCommands(fields, listArgsSize))
     {
         return NULL;
     }
     free(fields);
-    fields = splitString(args, &listArgsSize, " ");
+    fields = splitString(args, &listArgsSize, " ", NUMBER_OF_HEADERS_STACK);
     for (int c=0;c<listArgsSize-1;c++)
     {
         strcat(command, fields[c]);
@@ -160,8 +163,8 @@ char* searchProductInfo(char *args)
         return NULL;
     }
     char **resultRows = fetchall();
-    char *outputString = malloc(TABLE_HEADERS_STRING_LENGTH+strlen(resultRows[0])+1);
-    sprintf(outputString, "%s\n%s", TABLE_HEADERS_STRING, resultRows[0]);
+    char *outputString = malloc(TABLE_HEADERS_STRING_STACK_LENGTH+strlen(resultRows[0])+1);
+    sprintf(outputString, "%s\n%s", TABLE_HEADERS_STRING_STACK, resultRows[0]);
     freeBuffer();
     free(fields);
     return outputString;
@@ -178,7 +181,7 @@ static void copyStringIntoRow(char **arrayOfFields, row *outputRow)
     outputRow->product_id = atoi(arrayOfFields[0]);
     outputRow->name = buffer;
     outputRow->remaining = atoi(arrayOfFields[2]);
-    outputRow->cost =    atoi(arrayOfFields[3]);
+    outputRow->cost = atoi(arrayOfFields[3]);
     outputRow->revenue = atoi(arrayOfFields[4]);
     outputRow->profit = atoi(arrayOfFields[5]);
     outputRow->profit_procent = atof(arrayOfFields[6]);
@@ -191,10 +194,12 @@ static void addRows(row *oldRow, row *newRow)
     newRow->cost += oldRow->cost;
     newRow->revenue += oldRow->revenue;
     newRow->profit = newRow->revenue - newRow->cost;
-    newRow->profit_procent = round(newRow->revenue / newRow->cost)*100;
+    newRow->profit_procent = round((float) newRow->revenue / (float) newRow->cost) * 100.0;
     newRow->cost_1 = oldRow->cost_1;
 }
-int addNewProduct(char *name, int remaining, int cost, int revenue, int profit, float profit_procent, int cost_1)
+int addNewProduct(char *name, int remaining, 
+                    int cost, int revenue, int profit, 
+                    float profit_procent, int cost_1)
 {   
     if(sqlite3_complete(name))
     {
@@ -206,7 +211,9 @@ int addNewProduct(char *name, int remaining, int cost, int revenue, int profit, 
     row newRowLine = {0, name, remaining, cost, revenue, profit, profit_procent, cost_1};
     if (!fieldAndRowExist("STACK", "name", name))
     {
-        sprintf(command, "INSERT INTO STACK (name, remaining, cost, revenue, profit, profit_procent, cost_1) VALUES (%s, %d, %d, %d, %d, %f, %d);", name, remaining, cost, revenue, profit, profit_procent, cost_1);
+        sprintf(command, "INSERT INTO STACK (name, remaining, cost, revenue, profit, profit_procent," \
+            "cost_1) VALUES (%s, %d, %d, %d, %d, %f, %d);", name, remaining, cost, revenue,
+            profit, profit_procent, cost_1);
         return executeWriteCommand(command);
     }
     sprintf(command, "SELECT product_id, name, remaining, cost, revenue, profit, profit_procent, cost_1 FROM STACK WHERE name = %s;", name);
@@ -215,14 +222,14 @@ int addNewProduct(char *name, int remaining, int cost, int revenue, int profit, 
         return 0;
     }
     char **currentLines = fetchall();
-    char **currentFields = splitString(currentLines[0], &fieldsCount, "\t");
+    char **currentFields = splitString(currentLines[0], &fieldsCount, "\t", NUMBER_OF_HEADERS_STACK);
     copyStringIntoRow(currentFields, &oldRowLine);
     addRows(&oldRowLine, &newRowLine);
-    freeTable(currentFields, fieldsCount);
+    freeTable( (void**) currentFields, fieldsCount);
     freeBuffer();
 
-    sprintf(command, "UPDATE STACK SET remaining = %d, cost = %d, revenue = %d, profit = %d," \ 
-    "profit_procent = %lf, cost_1 = %d  WHERE product_id = %d;\0", newRowLine.remaining, 
+    sprintf(command, "UPDATE STACK SET remaining = %d, cost = %d, revenue = %d, profit = %d," \
+        "profit_procent = %lf, cost_1 = %d  WHERE product_id = %d;", newRowLine.remaining, 
                 newRowLine.cost, newRowLine.revenue, newRowLine.profit,
                 newRowLine.profit_procent, newRowLine.cost_1, newRowLine.product_id);
     

@@ -1,16 +1,19 @@
 #include <time.h>
-#define TABLE_HEADERS_STRING "ID\tNAME\tPLAN\tREAL_PROFIT"
-#define TABLE_HEADERS_STRING_LENGTH 28
-#define NUMBER_OF_HEADERS 4 
+#define TABLE_HEADERS_FINANCE_STRING "ID\tNAME\tPLAN\tREAL_PROFIT"
+#define TABLE_HEADERS_FINANCE_STRING_LENGTH 28
+#define NUMBER_OF_HEADERS_FINANCE 4 
 int getPlanForYear(void);
-char* getCurrentMonth(void);
+const char* getCurrentMonth(void);
 char* getMonthProfitID(char *monthName);
 char* getMonthProfit(char *monthName);
 char* getCurrentMonthPlan(void);
 char* getMonthPlan(char *monthName);
+char* getCurrentMonthProfit(void);
+int setPlanForMonth(char *monthName, int newPlan);
+int setProfitForMonth(char *monthName, int newProfit);
 
 static time_t time_s = {0};
-struct tm* currentTime = {0};
+static struct tm* currentTime = {0};
 static const char *months [] = {
     "January",
     "February",
@@ -29,7 +32,7 @@ int getPlanForYear(void)
 {
     return getFieldsSum("FINANCE", "plan");
 }
-char* getCurrentMonth(void)
+const char* getCurrentMonth(void)
 {
     time_s = time(NULL);
     currentTime = localtime(&time_s);
@@ -38,7 +41,7 @@ char* getCurrentMonth(void)
 char* getMonthProfitID(char *monthName)
 {
     char command [128];
-    sprintf(command, "SELECT month_id, real_profit FROM FINANCE WHERE name = %s;\0", monthName);
+    sprintf(command, "SELECT month_id, real_profit FROM FINANCE WHERE name = '%s';", monthName);
     if(sqlite3_complete(monthName) || !executeReadCommand(command))
     {
         return NULL;
@@ -53,7 +56,7 @@ char* getMonthProfitID(char *monthName)
 char* getMonthProfit(char *monthName)
 {
     char command [128];
-    sprintf(command, "SELECT real_profit FROM FINANCE WHERE name = %s;\0", monthName);
+    sprintf(command, "SELECT real_profit FROM FINANCE WHERE name = '%s';", monthName);
     if(sqlite3_complete(monthName) || !executeReadCommand(command))
     {
         return NULL;
@@ -68,7 +71,7 @@ char* getMonthProfit(char *monthName)
 char* getMonthPlan(char *monthName)
 {
     char command [128];
-    sprintf(command, "SELECT plan FROM FINANCE WHERE name = %s;\0", monthName);
+    sprintf(command, "SELECT plan FROM FINANCE WHERE name = '%s';", monthName);
     if(sqlite3_complete(monthName) || !executeReadCommand(command))
     {
         return NULL;
@@ -87,4 +90,16 @@ char* getCurrentMonthPlan(void)
 char* getCurrentMonthProfit(void)
 {
     return getMonthProfit(getCurrentMonth());
+}
+int setPlanForMonth(char *monthName, int newPlan)
+{
+    char command[128] = {0};
+    sprintf(command, "UPDATE FINANCE SET plan = %d WHERE name = '%s';\n", newPlan, monthName);
+    return executeWriteCommand(command);
+}
+int setProfitForMonth(char *monthName, int newProfit)
+{
+    char command[128] = {0};
+    sprintf(command, "UPDATE FINANCE SET real_profit = %d WHERE name = '%s';\n", newProfit, monthName);
+    return executeWriteCommand(command);
 }
