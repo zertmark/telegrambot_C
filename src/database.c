@@ -1,30 +1,21 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <stab.h>
 #include "database.h"
-#include "stack.h"
-#include "finance.h"
-#include "excel.h"
 #define        DEFAULT_PATH "/root/Desktop/FinanceBot/databases/test.db"
 #define        MAX_STRING_LINES 100
-//#define setRowInfo(dataBaseTableName, id, field, new_info) _Generic (a )
 static sqlite3  *dataBase = {0};
 static char     *errMessage = NULL;
 static char     **buffer = NULL;
 static int      bufferRowsCount = 0;
 static int      databaseRowsCount = 0;
 static char     *primaryKey = "product_id";
-//static char    *dataBaseTableName = "TEST";
 
 char** splitString(char *argsIn, int *listArgsSize, 
                             const char* determinator, 
                             int maxNumberOfStrings)
 {
     int iter = 0;
-    char buffer[256] = {0};
     char **outputList = malloc(sizeof(char *) * maxNumberOfStrings);
-    strncpy(buffer, argsIn,256);
+    char buffer[512] = {0};
+    strncpy(buffer, argsIn,512);
     char *buffer_ptr = strtok(buffer, determinator);
     
     while(buffer_ptr != NULL && iter != maxNumberOfStrings)
@@ -207,7 +198,11 @@ char** fetchall(void)
 char* fetchone(char **buffer, int *iter)
 { 
     return buffer[*iter];
-} 
+}
+void closeDatabase(void)
+{
+    sqlite3_close(dataBase);
+}
 void printBuffer(void)
 {
     for(int c=0;c<bufferRowsCount;c++)
@@ -278,88 +273,88 @@ char* getErrorMessage(void)
 {
     return errMessage;
 }
-int main()
-{
-    openDatabase("/root/Desktop/FinanceBot/databases/test.db");
-    //executeWriteCommand("INSERT INTO FINANCE (month_id, name, plan, real_profit) VALUES (12, 'December', 12000, 5000);");
-    //printf("%s\n", getCompleteRevenue());
-    //executeWriteCommand("CREATE TABLE IF NOT EXISTS FINANCE(" 
-    //"month_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," 
-    //"name TEXT NOT NULL," 
-    //"plan INTEGER NOT NULL," 
-    //"real_profit INTEGER NOT NULL);");
-
-    //executeWriteCommand("DROP TABLE TEST;");
-    //char *command = "CREATE TABLE IF NOT EXISTS STACK("  
-    //"product_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "  
-    //"name TEXT NOT NULL, " 
-    //"remaining INTEGER NOT NULL," 
-    //"cost INTEGER NOT NULL," 
-    //"revenue INTEGER," 
-    //"profit INTEGER," 
-    //"profit_procent REAL," 
-    //"cost_1  INTEGER);";
-    //executeWriteCommand(command);
-    //executeWriteCommand("INSERT INTO STACK (product_id, name, remaining, cost, revenue, profit, profit_procent, cost_1) VALUES (2, 'HQD', 100, 30000, 45000, 15000, 50, 300);");
-    //char *command = "SELECT * FROM TEST;";
-    if (executeReadCommand("SELECT * FROM STACK;") == 0)
-    {
-        printf("FUCK\n");
-        //printf("ERROR: %s\n", errMessage);
-        sqlite3_close(dataBase);
-        return -1;
-    }
-    printBuffer();
-    freeBuffer();
-    printf("getCompleteCost: %f\n", getCompleteCost());
-    printf("getCompleteRevenue:%f\n", getCompleteRevenue());
-    printf("getCompleteProfit:%f\n", getCompleteProfit());
-    printf("getCompleteProfitProcent:%f\n", getCompeleteProfitProcent());
-    printf("getMostProfitableProduct:\n%s\n", getMostProfitableProduct());
-    printf("getCompleteCost: %f\n", getCompleteCost());
-    printf("getProducIDString:%s\n", getProductIDString("HQD"));
-    printf("%s\n", getMonthPlan("January"));
-    printf("%s\n", getCurrentMonthPlan());
-    printf("%s\n", getCurrentMonthProfit());
-    setPlanForMonth("January", 30000);
-    setProfitForMonth("January", 30000);
-    generateExcelFile("test.xlsx", TABLE_HEADERS_STRING_STACK, NUMBER_OF_HEADERS_STACK);
-    ////setRowInfo("STACK", 4, "revenue", 5000);
-    //addNewProduct("'Brusko'", 10, 3000, 4000, 1000, 0.25f, 300);
-    //deteleProduct(3);
-    //printf(getProductInfo(1, "name"));
-    //char *test_str = malloc(sizeof(char)*28);
-    //test_str = "name='HQD'";    
-    //printf(searchProductInfo(test_str));
-    //printf("\nSEG?\n");
-    //free(test_str);
-    //char **test = revealDatabase(5)
-    //for(int c=0;c<getBufferRowsCount();c++)
-    //{
-    //    printf(test[c]);
-    //    printf("\n");
-    //}
-    //char **test = fetchall();
-    //strcpy(test, fetchall());
-    //for(int c=0;c<=sizeof(test)/sizeof(test[0]);c++)
-    //{
-    //    printf("%s\n", fetchone(test, &c));
-    //}
-    //printBuffer();
-    //freeBuffer();
-    //if (executeReadCommand("SELECT * FROM TEST WHERE ID = 3;") == 0)
-    //{
-    //    printf("ERROR: %s\n", errMessage);
-    //    sqlite3_close(dataBase);
-    //    return -1;
-    //}
-    //printBuffer();
-    //freeBuffer();
-    //printf("%d\n", updateDatabaseRowsCount() ? databaseRowsCount : 0);
-    //printf("%f\n", getFieldsAverageSum("SALARY"));
-    //printf("%d\n", fieldAndRowExist("STACK", "NAME", "'test'"));
-
-    //printf("Changed database\n");
-    sqlite3_close(dataBase);
-    return 0;
-}
+//int main()
+//{
+//    openDatabase("/root/Desktop/FinanceBot/databases/test.db");
+//    //executeWriteCommand("INSERT INTO FINANCE (month_id, name, plan, real_profit) VALUES (12, 'December', 12000, 5000);");
+//    //printf("%s\n", getCompleteRevenue());
+//    //executeWriteCommand("CREATE TABLE IF NOT EXISTS FINANCE(" 
+//    //"month_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," 
+//    //"name TEXT NOT NULL," 
+//    //"plan INTEGER NOT NULL," 
+//    //"real_profit INTEGER NOT NULL);");
+//
+//    //executeWriteCommand("DROP TABLE TEST;");
+//    //char *command = "CREATE TABLE IF NOT EXISTS STACK("  
+//    //"product_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "  
+//    //"name TEXT NOT NULL, " 
+//    //"remaining INTEGER NOT NULL," 
+//    //"cost INTEGER NOT NULL," 
+//    //"revenue INTEGER," 
+//    //"profit INTEGER," 
+//    //"profit_procent REAL," 
+//    //"cost_1  INTEGER);";
+//    //executeWriteCommand(command);
+//    //executeWriteCommand("INSERT INTO STACK (product_id, name, remaining, cost, revenue, profit, profit_procent, cost_1) VALUES (2, 'HQD', 100, 30000, 45000, 15000, 50, 300);");
+//    //char *command = "SELECT * FROM TEST;";
+//    if (executeReadCommand("SELECT * FROM STACK;") == 0)
+//    {
+//        printf("FUCK\n");
+//        //printf("ERROR: %s\n", errMessage);
+//        sqlite3_close(dataBase);
+//        return -1;
+//    }
+//    printBuffer();
+//    freeBuffer();
+//    printf("getCompleteCost: %f\n", getCompleteCost());
+//    printf("getCompleteRevenue:%f\n", getCompleteRevenue());
+//    printf("getCompleteProfit:%f\n", getCompleteProfit());
+//    printf("getCompleteProfitProcent:%f\n", getCompeleteProfitProcent());
+//    printf("getMostProfitableProduct:\n%s\n", getMostProfitableProduct());
+//    printf("getCompleteCost: %f\n", getCompleteCost());
+//    printf("getProducIDString:%s\n", getProductIDString("HQD"));
+//    printf("%s\n", getMonthPlan("January"));
+//    printf("%s\n", getCurrentMonthPlan());
+//    printf("%s\n", getCurrentMonthProfit());
+//    setPlanForMonth("January", 30000);
+//    setProfitForMonth("January", 30000);
+//    generateExcelFile("test.xlsx", TABLE_HEADERS_STRING_STACK, NUMBER_OF_HEADERS_STACK);
+//    ////setRowInfo("STACK", 4, "revenue", 5000);
+//    //addNewProduct("'Brusko'", 10, 3000, 4000, 1000, 0.25f, 300);
+//    //deteleProduct(3);
+//    //printf(getProductInfo(1, "name"));
+//    //char *test_str = malloc(sizeof(char)*28);
+//    //test_str = "name='HQD'";    
+//    //printf(searchProductInfo(test_str));
+//    //printf("\nSEG?\n");
+//    //free(test_str);
+//    //char **test = revealDatabase(5)
+//    //for(int c=0;c<getBufferRowsCount();c++)
+//    //{
+//    //    printf(test[c]);
+//    //    printf("\n");
+//    //}
+//    //char **test = fetchall();
+//    //strcpy(test, fetchall());
+//    //for(int c=0;c<=sizeof(test)/sizeof(test[0]);c++)
+//    //{
+//    //    printf("%s\n", fetchone(test, &c));
+//    //}
+//    //printBuffer();
+//    //freeBuffer();
+//    //if (executeReadCommand("SELECT * FROM TEST WHERE ID = 3;") == 0)
+//    //{
+//    //    printf("ERROR: %s\n", errMessage);
+//    //    sqlite3_close(dataBase);
+//    //    return -1;
+//    //}
+//    //printBuffer();
+//    //freeBuffer();
+//    //printf("%d\n", updateDatabaseRowsCount() ? databaseRowsCount : 0);
+//    //printf("%f\n", getFieldsAverageSum("SALARY"));
+//    //printf("%d\n", fieldAndRowExist("STACK", "NAME", "'test'"));
+//
+//    //printf("Changed database\n");
+//    sqlite3_close(dataBase);
+//    return 0;
+//}
