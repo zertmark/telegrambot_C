@@ -77,7 +77,7 @@ int fieldAndRowExist(char *dataBaseTableName, char *field, char *field_data)
     char formatted_command[256] = {0};
     int output = 0;
     sprintf(formatted_command, "SELECT EXISTS (SELECT 1 FROM %s WHERE %s = %s);", dataBaseTableName, field, field_data);
-    if (sqlite3_complete(field) || sqlite3_complete(field_data) || !executeReadCommand(formatted_command))
+    if (!executeReadCommand(formatted_command))
     {
         return output;
     }
@@ -90,7 +90,7 @@ float getFieldsAverageSum(char *dataBaseTableName, char *field)
     char formatted_command[128] = {0}; 
     float sum = 0.0;
     sprintf(formatted_command, "SELECT %s FROM %s;", field, dataBaseTableName);
-    if (sqlite3_complete(field) || !executeReadCommand(formatted_command))
+    if (!executeReadCommand(formatted_command))
     {
         return 0.0;
     }
@@ -128,7 +128,7 @@ float getFieldsSum(char *dataBaseTableName, char *field)
     char formatted_command[128] = {0}; 
     float sum = 0.0f;
     sprintf(formatted_command, "SELECT %s FROM %s;", field, dataBaseTableName);
-    if (sqlite3_complete(field) || !executeReadCommand(formatted_command))
+    if (!executeReadCommand(formatted_command))
     {
         return 0.0f;
     }
@@ -196,7 +196,7 @@ char** fetchall(void)
     return (char **) buffer;
 }
 char* fetchone(char **buffer, int *iter)
-{ 
+{
     return buffer[*iter];
 }
 void closeDatabase(void)
@@ -207,8 +207,8 @@ void printBuffer(void)
 {
     for(int c=0;c<bufferRowsCount;c++)
     {
-        printf(buffer[c]);
-        printf("\n");
+        printf("%s\n", buffer[c]);
+        //printf("\n");
     }
 }
 int executeReadCommand(char *command_string)
@@ -225,7 +225,7 @@ int executeReadCommand(char *command_string)
     bufferRowsCount = countRowsResult(stmt);
     //freeBuffer();
     buffer = malloc(bufferRowsCount * sizeof(char*));
-    int iterator = 0;
+    int iter = 0;
     char row_line [1024] = {0};
     while(sqlite3_step(stmt) == SQLITE_ROW)
     {
@@ -242,9 +242,9 @@ int executeReadCommand(char *command_string)
             strcat(row_line, "\t");
         }
         strcat(row_line, "\0");
-        buffer[iterator] = malloc(strlen(row_line)+1);
-        strcpy(buffer[iterator], row_line);
-        iterator++;
+        buffer[iter] = malloc(strlen(row_line)+1);
+        strcpy(buffer[iter], row_line);
+        iter++;
     }
     sqlite3_finalize(stmt);
     return 1;

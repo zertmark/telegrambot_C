@@ -28,13 +28,13 @@ char* getCurrentMonth(void)
 {
     time_s = time(NULL);
     currentTime = localtime(&time_s);
-    return (char *)months[currentTime->tm_mon];
+    return (char *) months[currentTime->tm_mon];
 }
 char* getMonthProfitID(char *monthName)
 {
     char command [128];
     sprintf(command, "SELECT month_id, real_profit FROM FINANCE WHERE name = '%s';", monthName);
-    if(sqlite3_complete(monthName) || !executeReadCommand(command))
+    if(!executeReadCommand(command))
     {
         return NULL;
     }
@@ -49,7 +49,7 @@ char* getMonthProfit(char *monthName)
 {
     char command [128];
     sprintf(command, "SELECT real_profit FROM FINANCE WHERE name = '%s';", monthName);
-    if(sqlite3_complete(monthName) || !executeReadCommand(command))
+    if(!executeReadCommand(command))
     {
         return NULL;
     }
@@ -64,7 +64,7 @@ char* getMonthPlan(char *monthName)
 {
     char command [128];
     sprintf(command, "SELECT plan FROM FINANCE WHERE name = '%s';", monthName);
-    if(sqlite3_complete(monthName) || !executeReadCommand(command))
+    if(!executeReadCommand(command))
     {
         return NULL;
     }

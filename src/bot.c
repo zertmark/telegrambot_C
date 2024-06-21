@@ -1,12 +1,12 @@
 #include "bot.h"
 #include "commands.h"
 #define SIZE_OF_ARRAY(array) (sizeof(array) / sizeof(array[0]))
-//telebot_handler_t handle;
-telebot_core_handler_t handle;
-static telebot_error_e error_status;
 #define MESSAGE_REPLY_SIZE 4096
+#define INVALID_ARGS_SIZE 48
+telebot_handler_t handle;
+static telebot_error_e error_status;
 
-char* helpMessage = NULL;
+static char* helpMessage = NULL;
 static int commandsCount = SIZE_OF_ARRAY(commands);
 
 static char* convertToLowerCase(char *string)
@@ -19,7 +19,7 @@ static char* convertToLowerCase(char *string)
 }
 int tryTocreateBot(char *token)
 {
-    return (telebot_core_create(&handle, token) == TELEBOT_ERROR_NONE);
+    return (telebot_create(&handle, token) == TELEBOT_ERROR_NONE);
 }
 char* getHelp()
 {
@@ -47,23 +47,26 @@ int isValidFunction(char **args, int argsLen, int *commandId)
         if(!strcmp(commands[c].name, args[0]))
         {
             *commandId = c;
-            return (commands[c].args_len_min <= argsLen && argsLen <= commands[c].args_len_max);
+            return (commands[c].args_len_min <= argsLen && argsLen <= commands[c].args_len_max &&
+            	   fieldsAreNotSQLCommands(args+1, argsLen));
         }
     }
     return 0;
 }
-char *getReplyFromDatabase(char *text)
-{   
+char* getReplyFromDatabase(char *text)
+{
     int argsCount = 0;
     int commandId = 0;
     char** args = splitString(text,&argsCount," ", 10);
     if (!isValidFunction(args, --argsCount, &commandId))
     {
         free(args);
-        return "Invalid args\nPlease type '/помощь' to see commands\n";
+        char * buffer = malloc(sizeof(char)*(INVALID_ARGS_SIZE+strlen(commands[commandId].name)));
+	sprintf(buffer, "Invalid args\nPlease type '%s' to see commands\n", 
+						  commands[commandId].name);
+	return buffer;
     }
-    //for(int c=0;c<SIZE_OF_ARRAY(commands[commandId].argsTypes) \
-              && commands[commandId].argsTypes[c] != NONE;c++)
+    //for(int c=0;c<SIZE_OF_ARRAY(commands[commandId].argsTypes) && commands[commandId].argsTypes[c] != NONE;c++)
     //{
     switch (commandId)
     {
@@ -71,16 +74,22 @@ char *getReplyFromDatabase(char *text)
         case 1:
             return getHelp();
             break;
+        case 2:
+            return ((char * (*)(char *)) commands[commandId].func_pointer)(args[1]);
+	    break;
+	case 3:
+//	    printf("Found command\n");
+	    return ((char * (*)()) commands[commandId].func_pointer)();
 
         default:
+	    printf("Didn't found command with %d ID\n", commandId);
             break;
     }
     //}
     //printf("%d\n", SIZE_OF_ARRAY(commands[commandId].argsTypes));
-    return "Test";
-
+    return NULL;
 }
-void startBot(char *token)
+void startBot()
 {
     //TO:DO Rewrite to telebot-core
     printf("Welcome to Echobot\n");
@@ -89,7 +98,7 @@ void startBot(char *token)
     telebot_message_t message;
     telebot_update_type_e update_types[] = {TELEBOT_UPDATE_TYPE_MESSAGE};
     char message_reply[MESSAGE_REPLY_SIZE]= {0};
-    telebot_core_response_t *response;
+    //telebot_core_response_t *response;
     //commands[0].test();
     //openDatabase("/root/Desktop/FinanceBot/databases/test.db");
     //if (executeReadCommand("SELECT * FROM STACK;") == 0)
@@ -108,32 +117,44 @@ void startBot(char *token)
     char *reply = NULL;
     while (1)
     {
-        //telebot_update_t *updates;
-        //error_status = telebot_core_get_updates(handle, offset,20,0,update_types,  response);
-        //error_status = telebot_get_updates(handle, offset, 20, 0, update_types, 0, &updates, &count);
+        telebot_update_t *updates;
+        //error_status = telebot_core_get_updates(handle, offset,20,0,"message", response);
+        error_status = telebot_get_updates(handle, offset, 20, 0, update_types, 0, &updates, &count);
         
         if (error_status != TELEBOT_ERROR_NONE)
-            //printf("Error occured: %d\n", error_status);
+        {
+           //printf("Error occured: %d\n", error_status);
             continue;
-        printf("Response%s\n", response);
+	}
+	//printf("Got response\n");
+        //printf("Response%s\n", response->data);
         for (index = 0; index < count; index++)
         {
-            //message = updates[index].message;
-            //if (!message.text)
-            //{
+            message = updates[index].message;
+            if (!message.text)
+            {
                 offset = updates[index].update_id + 1;
                 continue;
-            //}
+            }
             //printf("%s: %s \n", message.from->first_name, message.text);
             //telebot_send_dice(handle, message.chat->id, false, 0, "");
-            //reply = getReplyFromDatabase(message.text);
+            reply = getReplyFromDatabase(message.text);
             //printf("%d\n", strlen(reply));
-            //if (strlen(reply) <= MESSAGE_REPLY_SIZE)
-            //{
-            //    printf("Got right response...\nSending reply message...\n");
-                //strncpy(message_reply, reply, strlen(reply));
-            //    snprintf(message_reply, SIZE_OF_ARRAY(message_reply), "%s", reply);
-            //}
+	    if (reply == NULL || strlen(reply) > MESSAGE_REPLY_SIZE)
+	    {
+	    	printf("[ERROR] Didn't found command in commands or reply is too big\n");
+		offset = updates[index].update_id + 1;
+		if (reply != NULL)
+			free(reply);
+	    	continue;
+	    }
+//            if (strlen(reply) <= MESSAGE_REPLY_SIZE)
+//            {
+//                printf("Got right response...\nSending reply message...\n");
+            strncpy(message_reply, reply, strlen(reply));
+                //snprintf(message_reply, SIZE_OF_ARRAY(message_reply), "%s", reply);
+	    printf("%s\n", message_reply);
+//            }
             //printf("%s\n", message_reply);
             //strncpy(message_reply, getReplyFromDatabase(message.text), )
             //printf("%s\n", getReplyFromDatabase(message.text));
@@ -141,20 +162,20 @@ void startBot(char *token)
             //{
             //    snprintf(message_reply, MESSAGE_REPLY_SIZE, "Hello %s", message.from->first_name);
             //}
-            //error_status = telebot_send_message(handle, message.chat->id, message_reply, "HTML", false, false, updates[index].message.message_id, "");
+            error_status = telebot_send_message(handle, message.chat->id, message_reply, "HTML", false, false, updates[index].message.message_id, "");
             //error_status = telebot_core_send_message()
             if (error_status != TELEBOT_ERROR_NONE)
             {
                 printf("Failed to send message to %s: %d \n", message.from->first_name, error_status);
             }
-            
             offset = updates[index].update_id + 1;
+	    free(reply);
         }
-        //telebot_put_updates(updates, count);
-        telebot_core_put_response(response);
+        telebot_put_updates(updates, count);
+        //telebot_core_put_response(response);
         memset(message_reply, 0, 4096);
-        sleep(1);
+        sleep(0.5);
     }
-    telebot_core_destroy(handle);
-    //telebot_destroy(handle);
+    //telebot_core_destroy(&handle);
+    telebot_destroy(handle);
 }

@@ -3,7 +3,11 @@
 
 int main(int argc, char *argv[])
 {   
-    if (!tryTocreateBot(TOKEN)) {return 0;}
-    startBot(TOKEN);
+    if (!tryTocreateBot(TOKEN)) 
+    {
+    	printf("Failed to login with token\nExiting...\n");
+    	return -1;
+    }
+    startBot();
     return 0;
 }

@@ -12,7 +12,7 @@ void writeColumnNamesToWorksheet(char **columnNames, size_t numberOfColumns,
 int generateExcelFile(char *fileName, char *columnNames, 
                                 size_t headerColumnsNumber) 
 {
-    if (executeReadCommand("SELECT * FROM STACK;") == 0)
+    if (!executeReadCommand("SELECT * FROM STACK;"))
     {
         return 0;
     }
@@ -30,7 +30,7 @@ int generateExcelFile(char *fileName, char *columnNames,
         for(size_t col = 0;col<numberOfColumnsInRow;col++)
         {
             worksheet_write_string(worksheet, row+1, col, columns[col], NULL);
-        }    
+        }
     }
     workbook_close(workbook);
 }
