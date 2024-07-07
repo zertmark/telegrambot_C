@@ -21,7 +21,7 @@ typedef struct commandBasic
 command commands[] = 
 {
     {
-        "/помощь",
+        "/help",
         (void(*)(void)) getHelp,
         0,
         0
@@ -33,17 +33,30 @@ command commands[] =
         0
     },
     {
-        "/пм",
-        (void(*)(void)) getMonthProfit,
+        "/show",
+        (void(*)(void)) revealDatabase,
         1,
-        1
-    },
-    {
-        "/п",
-        (void(*)(void)) getCurrentMonthProfit,
-        0,
-        0
+        2
     }
+
+    //{
+    //    "/pm",
+    //    (void(*)(void)) getMonthProfit,
+    //    1,
+    //    1
+    //},
+    //{
+    //    "/p",
+    //    (void(*)(void)) getCurrentMonthProfit,
+    //    0,
+    //    0
+    //},
+    //{
+    //    "/p",
+    //    (void(*)(void)) getCurrentMonthProfit,
+    //    0,
+    //    0
+    //}
 //    {
 //        "/пм",
 //        (void(*)(void))getMonthProfit,

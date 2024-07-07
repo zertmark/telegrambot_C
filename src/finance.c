@@ -47,7 +47,7 @@ char* getMonthProfitID(char *monthName)
 }
 char* getMonthProfit(char *monthName)
 {
-    char command [128];
+    char command [256];
     sprintf(command, "SELECT real_profit FROM FINANCE WHERE name = '%s';", monthName);
     if(!executeReadCommand(command))
     {
@@ -56,6 +56,7 @@ char* getMonthProfit(char *monthName)
     char **outputLine = fetchall();
     char *output = malloc(strlen(outputLine[0])+strlen(monthName)+20);
     sprintf(output, "Profit of month %s:\n%s\n", monthName, outputLine[0]);
+    //printf("Test:%s\n",output);
     freeBuffer();
     free(outputLine);
     return output;

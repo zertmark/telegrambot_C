@@ -14,20 +14,36 @@ char** splitString(char *argsIn, int *listArgsSize,
 {
     int iter = 0;
     char **outputList = malloc(sizeof(char *) * maxNumberOfStrings);
-    char buffer[512] = {0};
-    strncpy(buffer, argsIn,512);
-    char *buffer_ptr = strtok(buffer, determinator);
+    char buffer_t[512] = {0};
+    strncpy(buffer_t, argsIn,512);
+    char *buffer_ptr = strtok(buffer_t, determinator);
     
     while(buffer_ptr != NULL && iter != maxNumberOfStrings)
     {
         outputList[iter] = malloc(sizeof(char) * (strlen(buffer_ptr)+1));
-        strncpy(outputList[iter], buffer_ptr, strlen(buffer_ptr)+1);
+        strncpy(outputList[iter], buffer_ptr, strlen(buffer_ptr));
+        outputList[iter][strlen(buffer_ptr)] = 0;
         buffer_ptr = strtok(NULL, determinator);
         iter++;
     }
     free(buffer_ptr);
     *listArgsSize = iter;
     return outputList;
+}
+static int get_buffer_size(int number_of_lines)
+{
+    if (buffer==NULL || bufferRowsCount==0 || number_of_lines==0)
+    {
+        printf("FUCK\n");
+        return 0;
+    }
+    int buffer_size = 0;
+    for(int c=0;c<number_of_lines;c++)
+    {
+        buffer_size+=strlen(buffer[c])+1;
+    }
+    printf("buffer size:%d\n",buffer_size);
+    return buffer_size;
 }
 void freeTable(void** table_ptr, unsigned long long int size)
 {
@@ -102,28 +118,40 @@ float getFieldsAverageSum(char *dataBaseTableName, char *field)
     return sum/bufferRowsCount;
 }
 
-char** revealDatabase(char *dataBaseTableName, int number_of_lines)
+char* revealDatabase(char* dataBaseTableName, int number_of_lines)
 {
+    //TO:DO Fix this function
     char formatted_command[128] = {0};
-    char **output = NULL;
+    char *output = NULL;
     sprintf(formatted_command, "SELECT * FROM %s;", dataBaseTableName);
+    printf("formatted_command:%s\tnumber of lines:%d\n", formatted_command, number_of_lines);
     if(!executeReadCommand(formatted_command))
     {
         return output;
     }
     number_of_lines = number_of_lines > bufferRowsCount ? bufferRowsCount: number_of_lines;
-    output = malloc(sizeof(char *)*number_of_lines);
-    for(int c=0;c < number_of_lines; c++)
+    int buffer_size = get_buffer_size(number_of_lines)+TABLE_HEADERS_STRING_STACK_LENGTH+7;
+    output = calloc(buffer_size, sizeof(char));
+    strcpy(output, "```\n");
+    if (!strcmp(dataBaseTableName, "STACK"))
     {
-        output[c] = malloc(strlen(buffer[c])+1);
-        strcpy(output[c], buffer[c]);
+        strncat(output, TABLE_HEADERS_STRING_STACK, TABLE_HEADERS_STRING_STACK_LENGTH);
     }
-    
+    if (!strcmp(dataBaseTableName, "FINANCE"))
+    {
+        strncat(output, TABLE_HEADERS_STRING_FINANCE, TABLE_HEADERS_STRING_FINANCE_LENGHT);
+    }
+    for(int c=0;c<number_of_lines; c++)
+    {
+        strcat(output, buffer[c]);
+        strcat(output, "\n");
+    }
+    strcat(output, "```");
+    output[buffer_size] = 0;
     freeBuffer();
-    bufferRowsCount=number_of_lines;
     return output;
 }
-float getFieldsSum(char *dataBaseTableName, char *field)
+float getFieldsSum(char* dataBaseTableName, char* field)
 {
     char formatted_command[128] = {0}; 
     float sum = 0.0f;
@@ -208,22 +236,20 @@ void printBuffer(void)
     for(int c=0;c<bufferRowsCount;c++)
     {
         printf("%s\n", buffer[c]);
-        //printf("\n");
     }
 }
 int executeReadCommand(char *command_string)
 {
     if (!sqlite3_complete(command_string)) 
     {
-        errMessage ="SQL COMMAND ERROR: Incomplete command\n";
+        errMessage = "SQL COMMAND ERROR: Incomplete command\n";
         return 0;
     }
-    sqlite3_stmt *stmt;
+    sqlite3_stmt *stmt = {0};
     int column_count = 0;
     sqlite3_prepare_v2(dataBase, command_string, strlen(command_string)+1, &stmt, NULL);
-    column_count = sqlite3_column_count(stmt); 
+    column_count = sqlite3_column_count(stmt);
     bufferRowsCount = countRowsResult(stmt);
-    //freeBuffer();
     buffer = malloc(bufferRowsCount * sizeof(char*));
     int iter = 0;
     char row_line [1024] = {0};

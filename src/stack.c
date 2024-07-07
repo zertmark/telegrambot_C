@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "stack.h"
 #include "database.h"
+#include "stack.h"
 static const char *headersTableStack[] = {
     "ID",
     "Name",
@@ -78,7 +78,7 @@ int deteleProduct(int product_id)
     if (product_id < 0)
     {
         return 0;
-    }
+    }   
     char formatted_command[128] = {0};
     sprintf(formatted_command, "DELETE FROM STACK WHERE product_id = %d;\n", product_id);
     return executeWriteCommand(formatted_command);

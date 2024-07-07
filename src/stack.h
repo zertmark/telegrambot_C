@@ -3,9 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#define TABLE_HEADERS_STRING_STACK "ID\tNAME\tREMAINING\tCOST\tREVENUE\tPROFIT\tPROFIT_PROCENT\tCOST_1"
-#define TABLE_HEADERS_STRING_STACK_LENGTH 67
-#define NUMBER_OF_HEADERS_STACK 8
 char* getProductIDString(char *name);
 int deteleProduct(int product_id);
 char* getMostProfitableProduct(void);
