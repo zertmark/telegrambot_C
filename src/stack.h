@@ -11,7 +11,6 @@ float getCompleteProfit(void);
 float getCompleteCost(void);
 float getAverageCostOne(void);
 float getCompeleteProfitProcent(void);
-char* searchProductInfo(char *args);
+char* searchProductInfo(char** args, int listArgsSize);
 int addNewProduct(char *name, int remaining, int cost, int revenue, 
                     int profit, float profit_procent, int cost_1);
-char* searchProductInfo(char *args);

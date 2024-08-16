@@ -1,6 +1,12 @@
 #include "database.h"
+#include "pretty_table.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 #define        DEFAULT_PATH "/root/Desktop/FinanceBot/databases/test.db"
 #define        MAX_STRING_LINES 100
+
 static sqlite3  *dataBase = {0};
 static char     *errMessage = NULL;
 static char     **buffer = NULL;
@@ -8,25 +14,51 @@ static int      bufferRowsCount = 0;
 static int      databaseRowsCount = 0;
 static char     *primaryKey = "product_id";
 
+static void free_outputList(char** outputList, int iter)
+{
+    for (int i = 0; i < iter; i++) 
+    {
+        free(outputList[i]);
+    }
+    free(outputList);
+}
 char** splitString(char *argsIn, int *listArgsSize, 
                             const char* determinator, 
                             int maxNumberOfStrings)
 {
-    int iter = 0;
-    char **outputList = malloc(sizeof(char *) * maxNumberOfStrings);
-    char buffer_t[512] = {0};
-    strncpy(buffer_t, argsIn,512);
-    char *buffer_ptr = strtok(buffer_t, determinator);
+    if (argsIn == NULL || determinator == NULL || listArgsSize == NULL) 
+    {
+        return NULL;
+    }
     
+    int iter = 0;
+    char **outputList = (char**)calloc(maxNumberOfStrings, sizeof(char *));
+    char* cpy = calloc(strlen(argsIn)+1, sizeof(char));
+    char* cpycpy = cpy;
+    if (outputList == NULL) 
+    {
+        return NULL;
+    }
+    strncpy(cpy, argsIn, strlen(argsIn)+1);
+    char *buffer_ptr = strtok(cpy, determinator);
+
     while(buffer_ptr != NULL && iter != maxNumberOfStrings)
     {
-        outputList[iter] = malloc(sizeof(char) * (strlen(buffer_ptr)+1));
-        strncpy(outputList[iter], buffer_ptr, strlen(buffer_ptr));
-        outputList[iter][strlen(buffer_ptr)] = 0;
+        size_t buffer_ptr_len = strlen(buffer_ptr)+1;
+        
+        outputList[iter] = calloc(buffer_ptr_len, sizeof(char));
+        if (outputList[iter] == NULL) 
+        {
+            free_outputList(outputList, iter);
+            printf("Error: Couldn't allocat memory");
+            exit(-1);
+        }
+        strncpy(outputList[iter], buffer_ptr, buffer_ptr_len);
+        outputList[iter][buffer_ptr_len-1] = 0;
         buffer_ptr = strtok(NULL, determinator);
         iter++;
     }
-    free(buffer_ptr);
+    free(cpycpy);
     *listArgsSize = iter;
     return outputList;
 }
@@ -34,15 +66,16 @@ static int get_buffer_size(int number_of_lines)
 {
     if (buffer==NULL || bufferRowsCount==0 || number_of_lines==0)
     {
-        printf("FUCK\n");
         return 0;
     }
     int buffer_size = 0;
     for(int c=0;c<number_of_lines;c++)
     {
-        buffer_size+=strlen(buffer[c])+1;
+        if (buffer[c])
+        {
+            buffer_size+=strlen(buffer[c])+1;
+        }
     }
-    printf("buffer size:%d\n",buffer_size);
     return buffer_size;
 }
 void freeTable(void** table_ptr, unsigned long long int size)
@@ -117,37 +150,41 @@ float getFieldsAverageSum(char *dataBaseTableName, char *field)
     freeBuffer();
     return sum/bufferRowsCount;
 }
-
+// static void addToBuffer(char* string)
+// {
+//     buffer = realloc(buffer, get_buffer_size(bufferRowsCount)+strlen(string)+1);
+//     buffer[0] = realloc(buffer[0], strlen(string));
+//     char* buffer_ptr = NULL;
+//     for(int c=0;c<bufferRowsCount-1;c++)
+//     {
+//         buffer_ptr = buffer[c];
+//         buffer[c] = buffer[c+1];
+//     }
+    
+// }
 char* revealDatabase(char* dataBaseTableName, int number_of_lines)
 {
-    //TO:DO Fix this function
+    //TO:DO Fix this function complety
     char formatted_command[128] = {0};
     char *output = NULL;
+    size_t buffer_size = 0;
     sprintf(formatted_command, "SELECT * FROM %s;", dataBaseTableName);
-    printf("formatted_command:%s\tnumber of lines:%d\n", formatted_command, number_of_lines);
     if(!executeReadCommand(formatted_command))
     {
         return output;
     }
+    printBuffer();
     number_of_lines = number_of_lines > bufferRowsCount ? bufferRowsCount: number_of_lines;
-    int buffer_size = get_buffer_size(number_of_lines)+TABLE_HEADERS_STRING_STACK_LENGTH+7;
-    output = calloc(buffer_size, sizeof(char));
-    strcpy(output, "```\n");
     if (!strcmp(dataBaseTableName, "STACK"))
     {
-        strncat(output, TABLE_HEADERS_STRING_STACK, TABLE_HEADERS_STRING_STACK_LENGTH);
+        return get_string_table(buffer, number_of_lines,NUMBER_OF_HEADERS_STACK, 
+                                                                                        TABLE_HEADERS_STRING_STACK, &buffer_size);
     }
     if (!strcmp(dataBaseTableName, "FINANCE"))
     {
-        strncat(output, TABLE_HEADERS_STRING_FINANCE, TABLE_HEADERS_STRING_FINANCE_LENGHT);
+        return get_string_table(buffer, number_of_lines,
+                                                        NUMBER_OF_HEADERS_FINANCE, TABLE_HEADERS_STRING_FINANCE, &buffer_size);
     }
-    for(int c=0;c<number_of_lines; c++)
-    {
-        strcat(output, buffer[c]);
-        strcat(output, "\n");
-    }
-    strcat(output, "```");
-    output[buffer_size] = 0;
     freeBuffer();
     return output;
 }
@@ -183,7 +220,7 @@ int getDatabaseRowsCount(void)
 {
     return databaseRowsCount;    
 }
-int getBufferRowsCount(void)
+size_t getBufferRowsCount(void)
 {
     return bufferRowsCount;
 }
@@ -235,7 +272,7 @@ void printBuffer(void)
 {
     for(int c=0;c<bufferRowsCount;c++)
     {
-        printf("%s\n", buffer[c]);
+        printf("%s \n", buffer[c]);
     }
 }
 int executeReadCommand(char *command_string)
@@ -250,7 +287,7 @@ int executeReadCommand(char *command_string)
     sqlite3_prepare_v2(dataBase, command_string, strlen(command_string)+1, &stmt, NULL);
     column_count = sqlite3_column_count(stmt);
     bufferRowsCount = countRowsResult(stmt);
-    buffer = malloc(bufferRowsCount * sizeof(char*));
+    buffer = calloc(bufferRowsCount, sizeof(char*));
     int iter = 0;
     char row_line [1024] = {0};
     while(sqlite3_step(stmt) == SQLITE_ROW)
@@ -260,7 +297,7 @@ int executeReadCommand(char *command_string)
         {
             if (sqlite3_column_type(stmt, c)!=SQLITE_NULL)
             {
-                strcat(row_line, sqlite3_column_text(stmt, c));
+                strcat(row_line, (char* )sqlite3_column_text(stmt, c));
                 strcat(row_line, "\t");
                 continue;
             }

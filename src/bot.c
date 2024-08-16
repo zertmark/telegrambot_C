@@ -1,10 +1,24 @@
 #include "bot.h"
 #include "commands.h"
+#include "stack.h"
+#include "telebot-types.h"
+//#include <cstdio>
+#include <stdio.h>
+#include <string.h>
+#include <threads.h>
+#include <time.h>
 #define SIZE_OF_ARRAY(array) (sizeof(array) / sizeof(array[0]))
 #define MESSAGE_REPLY_SIZE 4096
 #define INVALID_ARGS_SIZE 48
+#define INVALID_COMMAND_SIZE 21
+#define GR_COMMAND_STRING_OUTPUT 21
+#define DL_COMMAND_STRING_OUTPUT_OK 12
+#define DL_COMMAND_STRING_OUTPUT_ERROR 29
+#define ADD_COMMAND_STRING_OUTPUT_OK 10
+#define ADD_COMMAND_STRING_OUTPUT_ERROR 17
+
 telebot_handler_t handle;
-static telebot_error_e error_status;
+telebot_error_e error_status;
 
 static char* helpMessage = NULL;
 static int commandsCount = SIZE_OF_ARRAY(commands);
@@ -21,90 +35,160 @@ int tryTocreateBot(char *token)
 {
     return (telebot_create(&handle, token) == TELEBOT_ERROR_NONE);
 }
-char* getHelp()
+static void readHelpMessage()
 {
-    if (helpMessage)
-    {
-        return helpMessage;
-    }
     FILE *file_ptr = fopen("help.txt","r");
     fseek(file_ptr, 0, SEEK_END);
-    int f_size = ftell(file_ptr);
+    size_t f_size = ftell(file_ptr);
     rewind(file_ptr);
-    helpMessage = malloc(sizeof(char)*f_size); //this is dangerous way to read file
-    for(int i = 0; i < f_size; i++)
+    helpMessage = calloc(f_size, sizeof(char)); //this is dangerous way to read file
+    for(size_t i = 0; i < f_size; i++)
     {
         helpMessage[i] = fgetc(file_ptr);
     }
-    helpMessage[f_size] = '\0';
+    helpMessage[f_size] = 0;
     fclose(file_ptr);
-    return helpMessage;
+}
+static void free_args(char** args, int argsCount)
+{
+    for (int c=0;c<argsCount;c++)
+    {
+        if (args[c]!=NULL)
+            free(args[c]);
+    }
+    free(args);
+}
+char* getHelp()
+{
+    if (!helpMessage)
+    {
+        readHelpMessage();    
+    }
+    char* output = calloc(strlen(helpMessage), sizeof(char));
+    strncpy(output, helpMessage, strlen(helpMessage));
+    return output;
 }
 int isValidFunction(char **args, int argsLen, int *commandId)
 {
+    if (args[0]==NULL)
+    {
+        return 0;
+    }
     for (int c=0;c<commandsCount;c++)
     {
         if(!strcmp(commands[c].name, args[0]))
         {
             *commandId = c;
-            //printf("argsLen:%d\n", commands[c].args_len_min <= argsLen && argsLen <= commands[c].args_len_max);
             return (commands[c].args_len_min <= argsLen && argsLen <= commands[c].args_len_max &&
             	   fieldsAreNotSQLCommands(args+1, argsLen));
         }
     }
     return 0;
 }
+void stopBot()
+{
+    telebot_destroy(handle);
+    free(helpMessage);
+    closeDatabase();
+}
 char* getReplyFromDatabase(char *text)
 {
     int argsCount = 0;
     int commandId = 0;
+    printf("Got message\n");
+    //Memory leak right here (I'm not free'ing args)
     char** args = splitString(text,&argsCount," ", 10);
-    //printf("[DEBUG] Command ID:%d\targs[0]: %s\targs[1]: %s", commandId, args[0], args[1]);
-    //printf("ARGS: ")
     //TO:DO Fix recognition of commands
     if (!isValidFunction(args, --argsCount, &commandId))
     {
-        for (int c=0;c<argsCount;c++)
-        {
-            free(args[c]);
-        }
-        char* buffer = malloc(sizeof(char)*(INVALID_ARGS_SIZE+strlen(commands[0].name)));
+        char* buffer = calloc(INVALID_ARGS_SIZE+strlen(commands[0].name), sizeof(char));
 	    sprintf(buffer, "Invalid args\nPlease type '%s' to see commands\n", 
 						  commands[0].name);
+        free_args(args, argsCount);
 	    return buffer;
     }
-    //for(int c=0;c<SIZE_OF_ARRAY(commands[commandId].argsTypes) && commands[commandId].argsTypes[c] != NONE;c++)
-    //{
+    // Awful code and the way of doing memory managment
     //TO:DO Add all commands for bot
+    char* c_output = NULL;
     switch (commandId)
     {
         case 0:
         case 1:
             return getHelp();
             break;
-	    case 2:
+        case 2:
             if (argsCount==2)
             {
-                return ((char *(*)(char*, int)) commands[commandId].func_pointer)(args[1],atoi(args[2]));
+                c_output = ((char *(*)(char*, int)) commands[commandId].func_pointer)(args[1],atoi(args[2]));
+                break;
             }
-            return ((char *(*)(char*, int)) commands[commandId].func_pointer)(args[1],10);
+            c_output = ((char *(*)(char*, int)) commands[commandId].func_pointer)(args[1],10);
+            break;
+        case 3:
+            c_output = calloc(5, sizeof(char));
+            strcpy(c_output, "Stop");
+            break;
+        case 4:
+            c_output = ((char *(*)(char**, int)) commands[commandId].func_pointer)(args+1,argsCount);
+            break;
+        case 5:
+            c_output = ((char *(*)(void)) commands[commandId].func_pointer)();
+            break;
+        case 6:
+        case 7:
+            float c_float = ((float (*)(void)) commands[commandId].func_pointer)();
+            c_output = calloc(sizeof(float)+GR_COMMAND_STRING_OUTPUT,sizeof(char));
+            sprintf(c_output, "Total: %.3f", c_float);
+            break;
+        case 8:
+            int c_result =((int (*)(int)) commands[commandId].func_pointer)(atoi(args[1]));
+            if (c_result)
+            {
+                c_output = calloc( DL_COMMAND_STRING_OUTPUT_OK+strlen(args[1]),sizeof(char));
+                sprintf(c_output, "Deleted %s\n", args[1]);
+                break;
+            }
+            c_output = calloc(DL_COMMAND_STRING_OUTPUT_ERROR+strlen(args[1]),sizeof(char));
+            sprintf(c_output, "Couldn't delete %s\n", args[1]);
+            break;
+        case 9:
+            int result =((int (*)(char*, int, int, int, int, float, int)) 
+                                        commands[commandId].func_pointer)
+                                        (args[1], atoi(args[2]), atoi(args[3]),
+                                         atoi(args[4]), atoi(args[5]), atof(args[6]),
+                                         atoi(args[7]));
+            if (result)
+            {
+                c_output = calloc( ADD_COMMAND_STRING_OUTPUT_OK+strlen(args[1]),sizeof(char));
+                sprintf(c_output, "Added %s\n", args[1]);
+                break;
+            }
+            c_output = calloc(ADD_COMMAND_STRING_OUTPUT_ERROR+strlen(args[1]),sizeof(char));
+            sprintf(c_output, "Couldn't add %s\n", args[1]);
+            break;
+        case 10:
+        case 11:
+            c_output = ((char* (*)(void)) commands[commandId].func_pointer)();
+            break;
+        case 12:
+        case 13:
+            c_output = ((char* (*)(char *)) commands[commandId].func_pointer)(args[1]);
             break;
 
         default:
-	        printf("Didn't found command with %d ID\n", commandId);
+            c_output = calloc(INVALID_COMMAND_SIZE, sizeof(char));
+	        strncpy(c_output, "Didn't found command", INVALID_COMMAND_SIZE);
             break;
     }
-    printf("FUCK\n");
-    //}
-    //printf("%d\n", SIZE_OF_ARRAY(commands[commandId].argsTypes));
-    return NULL;
+    free_args(args, argsCount);
+    return c_output;
 }
 void startBot()
 {
     //TO:DO Rewrite to telebot-core
     printf("Welcome to Echobot\n");
     //printf("%d\n",commands[0].argsTypes[1]);
-    int index, count, offset = -1;
+    int index = 0, count = 0, offset = -1;
     telebot_message_t message;
     telebot_update_type_e update_types[] = {TELEBOT_UPDATE_TYPE_MESSAGE};
     char message_reply[MESSAGE_REPLY_SIZE]= {0};
@@ -129,47 +213,48 @@ void startBot()
     {
         telebot_update_t *updates;
         //error_status = telebot_core_get_updates(handle, offset,20,0,"message", response);
-        error_status = telebot_get_updates(handle, offset, 20, 0, update_types, 0, &updates, &count);
-        
-        if (error_status != TELEBOT_ERROR_NONE)
+        error_status = telebot_get_updates(handle, offset,100, 0, update_types, 0, &updates, &count);
+        if (error_status != TELEBOT_ERROR_NONE && error_status != TELEBOT_ERROR_OPERATION_FAILED)
         {
             printf("Error occured: %d\n", error_status);
             continue;
 	    }
         for (index = 0; index < count; index++)
         {
+            if(updates[index].update_type != TELEBOT_UPDATE_TYPE_MESSAGE)
+            {
+                offset = updates[index].update_id + 1;
+                continue;
+            }
             char *reply = NULL;
             message = updates[index].message;
             if (!message.text)
             {
                 offset = updates[index].update_id + 1;
+                printf("ERROR\n");
                 continue;
             }
             reply = getReplyFromDatabase(message.text);
+
 	        if (reply == NULL || strlen(reply) > MESSAGE_REPLY_SIZE)
 	        {
-	    	    printf("[ERROR] Didn't found command in commands or reply is too big\n");
+	   	        printf("[ERROR] Couldn't execute command or reply is too big\n");
 		        offset = updates[index].update_id + 1;
 		        if (reply != NULL)
-			        free(reply);
-	    	    continue;
+		    	    free(reply);
+	        	continue;
 	        }
-//            if (strlen(reply) <= MESSAGE_REPLY_SIZE)
-//            {
-//                printf("Got right response...\nSending reply message...\n");
+            if (!strcmp(reply, "Stop"))
+            {
+                printf("Stopping\n");
+                telebot_put_updates(updates, count);
+                stopBot();
+                exit(0);
+            }
+            printf("Got right response...\nSending reply message...\n");
             strncpy(message_reply, reply, strlen(reply));
-                //snprintf(message_reply, SIZE_OF_ARRAY(message_reply), "%s", reply);
 	        printf("%s\n", message_reply);
-//            }
-            //printf("%s\n", message_reply);
-            //strncpy(message_reply, getReplyFromDatabase(message.text), )
-            //printf("%s\n", getReplyFromDatabase(message.text));
-            //if (strstr(convertToLowerCase(message.text), "/start1"))
-            //{
-            //    snprintf(message_reply, MESSAGE_REPLY_SIZE, "Hello %s", message.from->first_name);
-            //}
             error_status = telebot_send_message(handle, message.chat->id, message_reply, "Markdown", false, false, updates[index].message.message_id, "");
-            //error_status = telebot_core_send_message()
             if (error_status != TELEBOT_ERROR_NONE)
             {
                 printf("Failed to send message to %s: %d \n", message.from->first_name, error_status);
@@ -181,6 +266,6 @@ void startBot()
         memset(message_reply, 0, 4096);
         sleep(1);
     }
-    telebot_destroy(handle);
-    closeDatabase();
+    stopBot();
+    exit(0);
 }

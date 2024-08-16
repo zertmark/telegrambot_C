@@ -37,60 +37,71 @@ command commands[] =
         (void(*)(void)) revealDatabase,
         1,
         2
+    },
+    {
+        "/stop",
+        (void(*)(void)) stopBot,
+        0,
+        0
+    },
+    {
+        "/search",
+        (void(*)(void)) searchProductInfo,
+        1,
+        NUMBER_OF_HEADERS_STACK*2
+    },
+    {
+        "/gmp",
+        (void(*)(void)) getMostProfitableProduct,
+        0,
+        0
+    },
+    {
+        "/gr",
+        (void(*)(void)) getCompleteRevenue,
+        0,
+        0
+    },
+    {
+        "/gcpr",
+        (void(*)(void)) getCompleteProfit,
+        0,
+        0
+    },
+    {
+        "/delete",
+        (void(*)(void)) deteleProduct,
+        1,
+        1
+    },
+    {
+        "/add",
+        (void(*)(void)) addNewProduct,
+        1,
+        NUMBER_OF_HEADERS_STACK
+    },
+    {
+        "/gcmpr",
+        (void(*)(void)) getCurrentMonthProfit,
+        0,
+        0
+    },
+    {
+        "/gcmp",
+        (void(*)(void)) getCurrentMonthPlan,
+        0,
+        0
+    },
+    {
+        "/gmpr",
+        (void(*)(void)) getMonthProfit,
+        1,
+        1
+    },
+    {
+        "/gmp",
+        (void(*)(void)) getMonthPlan,
+        1,
+        1
     }
-
-    //{
-    //    "/pm",
-    //    (void(*)(void)) getMonthProfit,
-    //    1,
-    //    1
-    //},
-    //{
-    //    "/p",
-    //    (void(*)(void)) getCurrentMonthProfit,
-    //    0,
-    //    0
-    //},
-    //{
-    //    "/p",
-    //    (void(*)(void)) getCurrentMonthProfit,
-    //    0,
-    //    0
-    //}
-//    {
-//        "/пм",
-//        (void(*)(void))getMonthProfit,
-//        1,
-//        1
-//    },
-//    {
-//        "/пм",
-//        (void(*)(void))getMonthProfit,
-//        1,
-//        1
-//    },
-//    {
-//        "/пм",
-//        (void(*)(void))getMonthProfit,
-//        1,
-//        1
-//    },
-//    {
-//        "/пм",
-//        (void(*)(void))getMonthProfit,
-//        1,
-//        1
-//    },
-//    {
-//        "/пм",
-//        (void(*)(void))getMonthProfit,
-//        1,
-//        1
-//    },
-//    {
-//        "/пм",
-//        (void(*)(void))getMonthProfit,
-//        1,
-//        1
-//    },
 };

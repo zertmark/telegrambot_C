@@ -13,3 +13,4 @@
 int tryTocreateBot(char *token);
 char* getHelp();
 void startBot();
+void stopBot();

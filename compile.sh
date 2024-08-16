@@ -1,2 +1,2 @@
 #!/bin/bash
-gcc src/* -lcurl -ljson-c -lsqlite3 -lz -lm -o FinanceBot.bin
+gcc --std=gnu18 -g src/* -lcurl -ljson-c -lsqlite3 -lz -lm -o FinanceBot.bin

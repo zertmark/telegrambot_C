@@ -2,18 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <time.h>
 #include "database.h"
 #include "stack.h"
-static const char *headersTableStack[] = {
-    "ID",
-    "Name",
-    "Remaining",
-    "Cost",
-    "Revenue",
-    "Profit",
-    "Profit_procent",
-    "Cost_1"
-};
 typedef struct {
     int product_id;
     char *name;
@@ -109,44 +100,25 @@ char* getProductInfo(int id, char *field)
     freeBuffer();
     return output;
 }
-//static char** splitString(char *argsIn, int *listArgsSize, 
-//                            const char* determinator, 
-//                            size_t maxNumberOfStrings)
-//{
-//    int iter = 0;
-//    char buffer[256] = {0};
-//    char **outputList = malloc(sizeof(char *) * maxNumberOfStrings);
-//    strncpy(buffer, argsIn,256);
-//    char *buffer_ptr = strtok(buffer, determinator);
-//    
-//    while(buffer_ptr != NULL && iter != maxNumberOfStrings)
-//    {
-//        outputList[iter] = malloc(sizeof(char) * (strlen(buffer_ptr)+1));
-//        strncpy(outputList[iter], buffer_ptr, strlen(buffer_ptr)+1);
-//        buffer_ptr = strtok(NULL, determinator);
-//        iter++;
-//    }
-//    free(buffer_ptr);
-//    *listArgsSize = iter;
-//    return outputList;
-//}
-char* searchProductInfo(char *args)
+char* searchProductInfo(char** args, int listArgsSize)
 {
-    int listArgsSize = 0; 
     char command[512] = "SELECT product_id, name, remaining, cost, revenue, profit, profit_procent, cost_1 FROM STACK WHERE ";
-    char **fields = splitString(args, &listArgsSize, " =", NUMBER_OF_HEADERS_STACK);
-    if(!fieldsAreNotSQLCommands(fields, listArgsSize))
-    {
-        return NULL;
-    }
-    free(fields);
-    fields = splitString(args, &listArgsSize, " ", NUMBER_OF_HEADERS_STACK);
+    //char **fields = splitString(args, &listArgsSize, " =", NUMBER_OF_HEADERS_STACK);
+    // if(!fieldsAreNotSQLCommands(fields, listArgsSize))
+    // {
+    //     return NULL;
+    // }
+    // for(int c=0;c<listArgsSize;c++)
+    // {
+    //     free(fields[c]);
+    // }
+    // fields = splitString(args, &listArgsSize, " ", NUMBER_OF_HEADERS_STACK);
     for (int c=0;c<listArgsSize-1;c++)
     {
-        strcat(command, fields[c]);
+        strcat(command, args[c]);
         strcat(command, " AND ");
     }
-    strcat(command, fields[listArgsSize-1]);
+    strcat(command, args[listArgsSize-1]);
     strcat(command, ";");
     if(!executeReadCommand(command))
     {
@@ -156,13 +128,9 @@ char* searchProductInfo(char *args)
     char *outputString = malloc(TABLE_HEADERS_STRING_STACK_LENGTH+strlen(resultRows[0])+1);
     sprintf(outputString, "%s\n%s", TABLE_HEADERS_STRING_STACK, resultRows[0]);
     freeBuffer();
-    free(fields);
+    //free(fields);
     return outputString;
 }
-//static int addNewDataToRow(row *newRowLine, char **fields)
-//{
-//    newRowLine->remaining+=fields
-//}
 static void copyStringIntoRow(char **arrayOfFields, row *outputRow)
 {
     char *buffer = malloc(strlen(arrayOfFields[1])+1);
@@ -212,6 +180,11 @@ int addNewProduct(char *name, int remaining,
         return 0;
     }
     char **currentLines = fetchall();
+    if (currentLines[0] == NULL)
+    {
+        printf("FUCK\n");
+        return 0;
+    }
     char **currentFields = splitString(currentLines[0], &fieldsCount, "\t", NUMBER_OF_HEADERS_STACK);
     copyStringIntoRow(currentFields, &oldRowLine);
     addRows(&oldRowLine, &newRowLine);
@@ -222,7 +195,7 @@ int addNewProduct(char *name, int remaining,
         "profit_procent = %lf, cost_1 = %d  WHERE product_id = %d;", newRowLine.remaining, 
                 newRowLine.cost, newRowLine.revenue, newRowLine.profit,
                 newRowLine.profit_procent, newRowLine.cost_1, newRowLine.product_id);
-    
+    free(newRowLine.name);
     return executeWriteCommand(command);
 
 }

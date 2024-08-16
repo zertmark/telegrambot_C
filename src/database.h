@@ -6,10 +6,10 @@
 #include <stab.h>
 #include <stddef.h>
 #include <string.h>
-#define TABLE_HEADERS_STRING_STACK "ID\tNAME\tREMAINING\tCOST\tREVENUE\tPROFIT\tPROFIT_PROCENT\tCOST_1\n"
+#define TABLE_HEADERS_STRING_STACK "ID\tNAME\tREMAINING\tCOST\tREVENUE\tPROFIT\tPROFIT_PROCENT\tCOST_1"
 #define TABLE_HEADERS_STRING_STACK_LENGTH 61
 #define NUMBER_OF_HEADERS_STACK 8
-#define TABLE_HEADERS_STRING_FINANCE "ID\tNAME\tPLAN\tREAL_PROFIT\n"
+#define TABLE_HEADERS_STRING_FINANCE "ID\tNAME\tPLAN\tREAL_PROFIT"
 #define TABLE_HEADERS_STRING_FINANCE_LENGHT 28
 #define NUMBER_OF_HEADERS_FINANCE 4
 int fieldsAreNotSQLCommands(char **fieldsList, int sizeList);
@@ -24,7 +24,7 @@ char* fetchone(char **buffer, int *iter);
 void freeBuffer(void);
 char* revealDatabase(char *dataBaseTableName, int number_of_lines);
 void freeTable(void** table_ptr, unsigned long long int size);
-int getBufferRowsCount(void);
+size_t getBufferRowsCount(void);
 float getFieldsAverageSum(char *dataBaseTableName, char *field);
 float getFieldsSum(char *dataBaseTableName, char *field);
 int updateDatabaseRowsCount(char *dataBaseTableName);
