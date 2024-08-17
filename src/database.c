@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#define        DEFAULT_PATH "./test.db"
+#define        DEFAULT_PATH "./databases/test.db"
 #define        MAX_STRING_LINES 100
 
 static sqlite3  *dataBase = {0};
