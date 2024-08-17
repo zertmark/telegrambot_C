@@ -89,6 +89,7 @@ void stopBot()
     telebot_destroy(handle);
     free(helpMessage);
     closeDatabase();
+    exit(0);
 }
 char* getReplyFromDatabase(char *text)
 {
@@ -241,7 +242,6 @@ void startBot()
                 error_status = telebot_send_message(handle, message.chat->id,"Stopping bot\n", "Markdown", false, false, updates[index].message.message_id, "");
                 telebot_put_updates(updates, count);
                 stopBot();
-                exit(0);
             }
             printf("Got right response...\nSending reply message...\n");
             strncpy(message_reply, reply, strlen(reply));
@@ -259,5 +259,4 @@ void startBot()
         sleep(1);
     }
     stopBot();
-    exit(0);
 }
