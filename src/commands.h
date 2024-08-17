@@ -77,7 +77,7 @@ command commands[] =
     {
         "/add",
         (void(*)(void)) addNewProduct,
-        1,
+        NUMBER_OF_HEADERS_STACK,
         NUMBER_OF_HEADERS_STACK
     },
     {
