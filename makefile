@@ -1,10 +1,12 @@
+BINARY_FILE = FinanceBot.bin
+
 build:
-	gcc --std=gnu18 -O3 src/* -lcurl -ljson-c -lsqlite3 -lz -lm -o FinanceBot.bin
+	gcc --std=gnu18 -O3 src/* -lcurl -ljson-c -lsqlite3 -lz -lm -o $(BINARY_FILE)
 
 run:
-	./FinanceBot.bin
+	./$(BINARY_FILE)
 
-build_and_run:
-	./compile.sh && ./FinanceBot.bin
+build_and_run: build run
+
 clean:
-	rm FinanceBot.bin
+	rm -f ./$(BINARY_FILE)
