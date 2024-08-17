@@ -235,7 +235,7 @@ void startBot()
 		    	    free(reply);
 	        	continue;
 	        }
-            if (!strcmp(reply, "Stop"))
+            if (!strcmp(reply, "Stop") && offset!=-1)
             {
                 printf("Stopping\n");
                 error_status = telebot_send_message(handle, message.chat->id,"Stopping bot\n", "Markdown", false, false, updates[index].message.message_id, "");
