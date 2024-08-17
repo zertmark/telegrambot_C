@@ -96,7 +96,6 @@ char* getReplyFromDatabase(char *text)
     int argsCount = 0;
     int commandId = 0;
     printf("Got message\n");
-    //Memory leak right here (I'm not free'ing args)
     char** args = splitString(text,&argsCount," ", 10);
     //TO:DO Fix recognition of commands
     if (!isValidFunction(args, --argsCount, &commandId))
@@ -198,34 +197,14 @@ char* getReplyFromDatabase(char *text)
 }
 void startBot()
 {
-    //TO:DO Rewrite to telebot-core
-    printf("Welcome to Echobot\n");
-    //printf("%d\n",commands[0].argsTypes[1]);
     int index = 0, count = 0, offset = -1;
     telebot_message_t message;
     telebot_update_type_e update_types[] = {TELEBOT_UPDATE_TYPE_MESSAGE};
     char message_reply[MESSAGE_REPLY_SIZE]= {0};
-    openDatabase("/root/Desktop/FinanceBot/databases/test.db");
-    //telebot_core_response_t *response;
-    //commands[0].test();
-    //if (executeReadCommand("SELECT * FROM FINANCE;") == 0)
-    //{
-    //    printf("FUCK\n");
-    //    //printf("ERROR: %s\n", errMessage);
-    //    closeDatabase();
-    //    return;
-    //}
-    //printBuffer();
-    //freeBuffer();
-    //printf("%s\n", getHelp());
-    
-    //printf("%d\n", commands[0].test);
-    //printf("%s\n", ((char *(*)(char *))commands[0].test) ("HASKI"));
-    //printf("test1\n");   
+    openDatabase("/root/Desktop/FinanceBot/databases/test.db");   
     while (1)
     {
         telebot_update_t *updates;
-        //error_status = telebot_core_get_updates(handle, offset,20,0,"message", response);
         error_status = telebot_get_updates(handle, offset,100, 0, update_types, 0, &updates, &count);
         if (error_status != TELEBOT_ERROR_NONE && error_status != TELEBOT_ERROR_OPERATION_FAILED)
         {
