@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include <string.h>
 #include <unistd.h>
-#include <telebot.h>
+#include "telebot.h"
 //#include <telebot-core.h>
 //#include <telebot-types.h>
 //#include <telebot-methods.h>

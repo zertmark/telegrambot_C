@@ -1,7 +1,6 @@
 #include "bot.h"
 #include "commands.h"
-#include "stack.h"
-#include "telebot-types.h"
+#include "telebot-common.h"
 #include <stdio.h>
 #include <string.h>
 #include <threads.h>
