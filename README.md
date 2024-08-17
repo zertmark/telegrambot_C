@@ -1,6 +1,8 @@
 # README
 This is Telegram bot that can manage products and finances\
 Add your token in main.c
+#Installation
+You need to install json-c
 # Compile
 gcc --std=gnu18 -O3 src/* -lcurl -ljson-c -lsqlite3 -lz -lm -o FinanceBot.bin
 ### OR
