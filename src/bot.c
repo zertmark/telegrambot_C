@@ -2,7 +2,6 @@
 #include "commands.h"
 #include "stack.h"
 #include "telebot-types.h"
-//#include <cstdio>
 #include <stdio.h>
 #include <string.h>
 #include <threads.h>
@@ -16,7 +15,8 @@
 #define DL_COMMAND_STRING_OUTPUT_ERROR 29
 #define ADD_COMMAND_STRING_OUTPUT_OK 10
 #define ADD_COMMAND_STRING_OUTPUT_ERROR 17
-
+#define ST_COMMNAND_STRING_OUTPUT_OK 18 
+#define ST_COMMAND_STRING_OUTPUT_ERROR 26
 telebot_handler_t handle;
 telebot_error_e error_status;
 
@@ -110,6 +110,8 @@ char* getReplyFromDatabase(char *text)
     // Awful code and the way of doing memory managment
     //TO:DO Add all commands for bot
     char* c_output = NULL;
+    int c_result = 0;
+    float c_float = 0.0;
     switch (commandId)
     {
         case 0:
@@ -136,12 +138,12 @@ char* getReplyFromDatabase(char *text)
             break;
         case 6:
         case 7:
-            float c_float = ((float (*)(void)) commands[commandId].func_pointer)();
+            c_float = ((float (*)(void)) commands[commandId].func_pointer)();
             c_output = calloc(sizeof(float)+GR_COMMAND_STRING_OUTPUT,sizeof(char));
             sprintf(c_output, "Total: %.3f", c_float);
             break;
         case 8:
-            int c_result =((int (*)(int)) commands[commandId].func_pointer)(atoi(args[1]));
+            c_result =((int (*)(int)) commands[commandId].func_pointer)(atoi(args[1]));
             if (c_result)
             {
                 c_output = calloc( DL_COMMAND_STRING_OUTPUT_OK+strlen(args[1]),sizeof(char));
@@ -152,12 +154,12 @@ char* getReplyFromDatabase(char *text)
             sprintf(c_output, "Couldn't delete %s\n", args[1]);
             break;
         case 9:
-            int result =((int (*)(char*, int, int, int, int, float, int)) 
+            c_result =((int (*)(char*, int, int, int, int, float, int)) 
                                         commands[commandId].func_pointer)
                                         (args[1], atoi(args[2]), atoi(args[3]),
                                          atoi(args[4]), atoi(args[5]), atof(args[6]),
                                          atoi(args[7]));
-            if (result)
+            if (c_result)
             {
                 c_output = calloc( ADD_COMMAND_STRING_OUTPUT_OK+strlen(args[1]),sizeof(char));
                 sprintf(c_output, "Added %s\n", args[1]);
@@ -174,7 +176,18 @@ char* getReplyFromDatabase(char *text)
         case 13:
             c_output = ((char* (*)(char *)) commands[commandId].func_pointer)(args[1]);
             break;
-
+        case 14:
+        case 15:
+            c_result = ((int (*) (char*, int)) commands[commandId].func_pointer)(args[1], atoi(args[2]));
+            if (c_result)
+            {
+                c_output = calloc(ST_COMMNAND_STRING_OUTPUT_OK+strlen(args[1]), sizeof(char));
+                sprintf(c_output, "Updated month %s\n", args[1]);
+                break;
+            }
+            c_output = calloc(ST_COMMAND_STRING_OUTPUT_ERROR+strlen(args[1]), sizeof(char));
+            sprintf(c_output, "Couldn't update month %s\n", args[1]);
+            break;
         default:
             c_output = calloc(INVALID_COMMAND_SIZE, sizeof(char));
 	        strncpy(c_output, "Didn't found command", INVALID_COMMAND_SIZE);
@@ -247,6 +260,7 @@ void startBot()
             if (!strcmp(reply, "Stop"))
             {
                 printf("Stopping\n");
+                error_status = telebot_send_message(handle, message.chat->id,"Stopping bot\n", "Markdown", false, false, updates[index].message.message_id, "");
                 telebot_put_updates(updates, count);
                 stopBot();
                 exit(0);

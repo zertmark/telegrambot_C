@@ -81,7 +81,7 @@ static char*** create_table (char** string, int* column_max, int size,
         table[c] = splitString(string[c-1], &size, "\t", columns_count);   
         for(size_t j=0;j<columns_count;j++)
         {
-            column_max[j] = max(column_max[j], strlen(table[c-1][j])+2);
+            column_max[j] = max(column_max[j], strlen(table[c-1][j])+1);
         }
         free(string[c-1]);
     }

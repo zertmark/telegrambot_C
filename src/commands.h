@@ -103,5 +103,17 @@ command commands[] =
         (void(*)(void)) getMonthPlan,
         1,
         1
+    },
+    {
+        "/splfm",
+        (void(*)(void)) setPlanForMonth,
+        2,
+        2
+    },
+    {
+        "/sprfm",
+        (void(*)(void)) setProfitForMonth,
+        2,
+        2
     }
 };

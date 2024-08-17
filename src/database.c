@@ -150,21 +150,8 @@ float getFieldsAverageSum(char *dataBaseTableName, char *field)
     freeBuffer();
     return sum/bufferRowsCount;
 }
-// static void addToBuffer(char* string)
-// {
-//     buffer = realloc(buffer, get_buffer_size(bufferRowsCount)+strlen(string)+1);
-//     buffer[0] = realloc(buffer[0], strlen(string));
-//     char* buffer_ptr = NULL;
-//     for(int c=0;c<bufferRowsCount-1;c++)
-//     {
-//         buffer_ptr = buffer[c];
-//         buffer[c] = buffer[c+1];
-//     }
-    
-// }
 char* revealDatabase(char* dataBaseTableName, int number_of_lines)
 {
-    //TO:DO Fix this function complety
     char formatted_command[128] = {0};
     char *output = NULL;
     size_t buffer_size = 0;
