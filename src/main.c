@@ -1,5 +1,5 @@
 #include "bot.h"
-#define TOKEN "5766970401:AAF8xYXEQ0yaPJEr4VCOFaBNHVO2jgUei0Y"
+#define TOKEN "ENTER_YOUR_TOKEN_HERE"
 
 int main(int argc, char *argv[])
 {
