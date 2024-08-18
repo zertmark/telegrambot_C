@@ -77,8 +77,8 @@ command commands[] =
     {
         "/add",
         (void(*)(void)) addNewProduct,
-        NUMBER_OF_HEADERS_STACK,
-        NUMBER_OF_HEADERS_STACK
+        NUMBER_OF_HEADERS_STACK-1,
+        NUMBER_OF_HEADERS_STACK-1
     },
     {
         "/gcmpr",
