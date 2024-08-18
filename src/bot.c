@@ -5,6 +5,7 @@
 #include <string.h>
 #include <threads.h>
 #include <time.h>
+
 #define SIZE_OF_ARRAY(array) (sizeof(array) / sizeof(array[0]))
 #define MESSAGE_REPLY_SIZE 4096
 #define INVALID_ARGS_SIZE 48
@@ -16,6 +17,7 @@
 #define ADD_COMMAND_STRING_OUTPUT_ERROR 17
 #define ST_COMMNAND_STRING_OUTPUT_OK 18 
 #define ST_COMMAND_STRING_OUTPUT_ERROR 26
+
 telebot_handler_t handle;
 telebot_error_e error_status;
 

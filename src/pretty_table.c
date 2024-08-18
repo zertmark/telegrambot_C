@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-//#include <cstdio>
 void clean_table(char*** table, size_t rows_count, size_t columns_count)
 {
     if (table==NULL)
@@ -64,14 +63,25 @@ static void append_spaces_to_table(char*** table, int* column_max, size_t rows_c
         }
     }
 }
+static void calculate_columns_max(char*** table,int* column_max, 
+                        size_t rows_count, size_t columns_count)
+{
+    for(size_t c=0;c<rows_count;c++)
+    {
+        for(size_t j=0;j<columns_count;j++)
+        {
+            column_max[j] = max(column_max[j], strlen(table[c][j])+1);
+        }
+    }
+}
 static char*** create_table (char** string, int* column_max, int size,
-                                size_t rows_count, size_t columns_count, char* headers)
+                    size_t rows_count, size_t columns_count, char* headers)
 {
     char*** table = calloc(rows_count, sizeof(char**));
     printf("Adding headers\n");
-    table[0] = splitString(headers, &size, "\t", columns_count);
-    //printf("%s\n", table[0][0]);
-    //printf("\n---\n%d\n---\n", (int) rows_count);
+    table[0] = splitString(headers, &size, 
+                "\t", columns_count);
+    
     for(size_t c=1;c<rows_count;c++)
     {
         if (string[c-1] == NULL)
@@ -79,25 +89,20 @@ static char*** create_table (char** string, int* column_max, int size,
             continue;
         }
         table[c] = splitString(string[c-1], &size, "\t", columns_count);   
-        for(size_t j=0;j<columns_count;j++)
-        {
-            column_max[j] = max(column_max[j], strlen(table[c-1][j])+1);
-        }
         free(string[c-1]);
     }
-    printf("Adding spaces to table\n");
+    calculate_columns_max (table, column_max,  rows_count,  columns_count);
     append_spaces_to_table(table, column_max,  rows_count,  columns_count);
+
+    free(column_max);
+    
     return table;
 }
-
 char*** get_table(char** string, size_t rows_count, size_t columns_count, char* headers)
 {
     int* column_max = calloc(columns_count, sizeof(int));
     char*** table = create_table(string, column_max, 0, rows_count, columns_count, headers);
     
-    //print_table(table, rows_count, columns_count);
-    //clean_table(table, rows_count, columns_count);
-    free(column_max);
     return table;
 }
 char* get_string_table(char** string, size_t rows_count, size_t columns_count, char* headers, size_t* len)
@@ -124,7 +129,6 @@ char* get_string_table(char** string, size_t rows_count, size_t columns_count, c
     strcat(output, "```\n");
     *len = table_size;
     output[table_size] = 0;
-    free(column_max);
     clean_table(table, rows_count, columns_count);
     return output;
 }
