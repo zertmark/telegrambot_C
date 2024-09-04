@@ -1,7 +1,7 @@
 #include "bot.h"
 char* read_token()
 {
-    FILE *file_ptr = fopen("token","r");
+    FILE *file_ptr = fopen(".token","r");
     fseek(file_ptr, 0, SEEK_END);
     size_t f_size = ftell(file_ptr);
     rewind(file_ptr);
