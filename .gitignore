@@ -1,4 +1,4 @@
 *.bin
 *.xlsx
 .vscode/
-token
+.token
