@@ -15,12 +15,18 @@ jobs:
 
       - name: Build
         run: make build
-
-      - name: Zip application
-        run: zip FinanceBot.zip
+      
+      - name: Create release folder
+        run: mkdir FinanceBot
+      
+      - name: Move application
+        run: mv 
           FinanceBot.bin
           help.txt
           token
+
+      - name: Zip application
+        run: zip -r FinanceBot.zip FinanceBot
 
       - name: Release
         uses: softprops/action-gh-release@v2
