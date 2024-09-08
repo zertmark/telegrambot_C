@@ -10,6 +10,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install dependencies
+        run: sudo apt install -y libcurl4-openssl-dev libjson-c-dev
+
       - name: Build
         run: make build
 
