@@ -1,0 +1,29 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@main
+
+      - name: Install dependencies
+        run: sudo apt install -y libcurl4-openssl-dev libjson-c-dev
+
+      - name: build application
+        run: make build
+
+      - name: Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: FinanceBot
+          path: |
+            FinanceBot.bin
+            help.txt
+            token

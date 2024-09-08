@@ -1,0 +1,36 @@
+name: create release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: sudo apt install -y libcurl4-openssl-dev libjson-c-dev
+
+      - name: Build
+        run: make build
+      
+      - name: Create release folder
+        run: mkdir FinanceBot
+      
+      - name: Move application
+        run: mv 
+          FinanceBot.bin
+          help.txt
+          token
+          FinanceBot
+
+      - name: Zip application
+        run: zip -r FinanceBot.zip FinanceBot
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: FinanceBot.zip
