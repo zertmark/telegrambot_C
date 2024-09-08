@@ -17,7 +17,7 @@ jobs:
         run: make build
 
       - name: Zip application
-        run: zip FinanceBot.zip >
+        run: zip FinanceBot.zip
           FinanceBot.bin
           help.txt
           token
