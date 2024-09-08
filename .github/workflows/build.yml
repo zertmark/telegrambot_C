@@ -19,8 +19,9 @@ jobs:
       - name: build application
         run: make build
 
-      - name: Archive production artifacts
+      - name: Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: binary
-          path: FinanceBot.bin
+          name: FinanceBot.bin
+          path:
+          if-no-files-found: error
