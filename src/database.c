@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#define        DEFAULT_PATH "./databases/test.db"
+#define        DEFAULT_PATH "./databases/d1.db"
 #define        MAX_STRING_LINES 100
 
 static sqlite3  *dataBase = {0};
@@ -216,10 +216,17 @@ void openDatabase(char *path_to_database)
     sqlite3_initialize();
     if (access(path_to_database, F_OK || W_OK || R_OK) == -1) 
     {
+        pritnf("[WARNING] Couldn't find existing database at databases/test.db\nUsing default database path...\n");
         path_to_database = DEFAULT_PATH;
     }
-    sqlite3_open(path_to_database, &dataBase);    
+    if (sqlite3_open(path_to_database, &dataBase) == SQLITE_OK)
+    {
+        return;
+    }
+
+    createDatabase(path_to_database);
 }
+
 static int countRowsResult(sqlite3_stmt *stmt)
 {   
     sqlite3_reset(stmt);
