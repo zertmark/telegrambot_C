@@ -1,5 +1,6 @@
 #include "database.h"
 #include "pretty_table.h"
+#include <sqlite3.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -216,19 +217,16 @@ size_t getBufferRowsCount(void)
 {
     return bufferRowsCount;
 }
-//Should be only called, after function executeReadCommand("SELECT * FROM ALL;");  
-static int checkHeaders(const char* d_table, const char* HEADERS)
-{
-    if (buffer[0]==NULL || strstr(buffer[0], "NULL")!=NULL)
-    {
-        return 0;
-    }
-
-    return strcmp(buffer[0], HEADERS)==0;
-}
 static int checkRows()
 {
-
+    for (int c=0;c<bufferRowsCount;c++)
+    {
+        if (strstr(buffer[c], "NULL")!=NULL)
+        {
+            return 0;
+        }
+    }
+    return 1;
 }
 int checkTable(const char* d_table, const char* HEADERS)
 {
@@ -239,10 +237,17 @@ int checkTable(const char* d_table, const char* HEADERS)
         return 0;
     }
 
+    if (bufferRowsCount!=0 && (strcmp(buffer[0], HEADERS)==0) 
+                                                    && checkRows())
+    {
+        return  1;
+    }
+    return 0;
 }
 int checkDatabase()
 {
-
+    return checkTable("STACK", TABLE_HEADERS_STRING_STACK) && \
+            checkTable("FINANCE", TABLE_HEADERS_STRING_FINANCE);
 }
 void createDatabase(char* path_to_database)
 {
@@ -256,10 +261,16 @@ void openDatabase(char *path_to_database)
         printf("[WARNING] Couldn't find existing database at databases/test.db\nUsing default database path...\n");
         path_to_database = DEFAULT_PATH;
     }
-    if (sqlite3_open(path_to_database, &dataBase) == SQLITE_OK)
+    short result = sqlite3_open(path_to_database, &dataBase);
+    if (result == SQLITE_ERROR || dataBase == NULL)
     {
+        if (dataBase == NULL)
+            printf("[ERROR] Not enough memory\nExiting...\n");
+            return;
+        printf("%s\n", sqlite3_errmsg(dataBase));
         return;
     }
+
     createDatabase(path_to_database);
 }
 static int countRowsResult(sqlite3_stmt *stmt)
