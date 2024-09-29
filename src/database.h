@@ -6,12 +6,25 @@
 #include <stab.h>
 #include <stddef.h>
 #include <string.h>
+
 #define TABLE_HEADERS_STRING_STACK "ID\tNAME\tREMAINING\tCOST\tREVENUE\tPROFIT\tPROFIT %\tCOST_1"
 #define TABLE_HEADERS_STRING_STACK_LENGTH 61
+
 #define NUMBER_OF_HEADERS_STACK 8
+#define NUMBER_OF_HEADERS_FINANCE 4
+
 #define TABLE_HEADERS_STRING_FINANCE "ID\tNAME\tPLAN\tPROFIT"
 #define TABLE_HEADERS_STRING_FINANCE_LENGHT 28
-#define NUMBER_OF_HEADERS_FINANCE 4
+
+#define        DEFAULT_PATH "./databases/d1.db"
+#define        MAX_STRING_LINES 100
+
+/*  Strange idea to implement mechanism to know, 
+    what kind of table names existing database should have 
+*/
+#define        TABLE_NAME_1 "STACK"
+#define        TABLE_NAME_2 "FINANCE"
+
 int fieldsAreNotSQLCommands(char **fieldsList, int sizeList);
 int fieldAndRowExist(char *dataBaseTableName, char *field, char *field_data);
 void openDatabase(char *path_to_database);

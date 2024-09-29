@@ -4,8 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#define        DEFAULT_PATH "./databases/d1.db"
-#define        MAX_STRING_LINES 100
 
 static sqlite3  *dataBase = {0};
 static char     *errMessage = NULL;
@@ -13,6 +11,13 @@ static char     **buffer = NULL;
 static int      bufferRowsCount = 0;
 static int      databaseRowsCount = 0;
 static char     *primaryKey = "product_id";
+
+
+//A little hacky
+const char* tables[] = {
+    "STACK",
+    "FINANCE"
+};
 
 static void free_outputList(char** outputList, int iter)
 {
@@ -211,22 +216,52 @@ size_t getBufferRowsCount(void)
 {
     return bufferRowsCount;
 }
+//Should be only called, after function executeReadCommand("SELECT * FROM ALL;");  
+static int checkHeaders(const char* d_table, const char* HEADERS)
+{
+    if (buffer[0]==NULL || strstr(buffer[0], "NULL")!=NULL)
+    {
+        return 0;
+    }
+
+    return strcmp(buffer[0], HEADERS)==0;
+}
+static int checkRows()
+{
+
+}
+int checkTable(const char* d_table, const char* HEADERS)
+{
+    char formatted_command [128];
+    sprintf(formatted_command, "SELECT * FROM %s;", d_table);
+    if (!executeReadCommand(formatted_command))
+    {
+        return 0;
+    }
+
+}
+int checkDatabase()
+{
+
+}
+void createDatabase(char* path_to_database)
+{
+
+}
 void openDatabase(char *path_to_database)
 {
     sqlite3_initialize();
     if (access(path_to_database, F_OK || W_OK || R_OK) == -1) 
     {
-        pritnf("[WARNING] Couldn't find existing database at databases/test.db\nUsing default database path...\n");
+        printf("[WARNING] Couldn't find existing database at databases/test.db\nUsing default database path...\n");
         path_to_database = DEFAULT_PATH;
     }
     if (sqlite3_open(path_to_database, &dataBase) == SQLITE_OK)
     {
         return;
     }
-
     createDatabase(path_to_database);
 }
-
 static int countRowsResult(sqlite3_stmt *stmt)
 {   
     sqlite3_reset(stmt);

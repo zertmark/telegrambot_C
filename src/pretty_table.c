@@ -49,10 +49,6 @@ static void append_spaces_to_table(char*** table, int* column_max, size_t rows_c
     {
         for(size_t i=0;i<columns_count;i++)
         {
-            if (table[c][i]==NULL)
-            {
-                continue;
-            }
             size_t size = strlen(table[c][i]);
             table[c][i] = realloc(table[c][i], column_max[i]);
             for(size_t j=size;j<column_max[i];j++) 
@@ -70,6 +66,10 @@ static void calculate_columns_max(char*** table,int* column_max,
     {
         for(size_t j=0;j<columns_count;j++)
         {
+            if (table[c][j]==NULL)
+            {
+                continue;
+            }
             column_max[j] = max(column_max[j], strlen(table[c][j])+1);
         }
     }
