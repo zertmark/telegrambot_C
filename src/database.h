@@ -27,7 +27,7 @@
 
 int fieldsAreNotSQLCommands(char **fieldsList, int sizeList);
 int fieldAndRowExist(char *dataBaseTableName, char *field, char *field_data);
-void openDatabase(char *path_to_database);
+int openDatabase(char *path_to_database);
 void printBuffer(void);
 int executeWriteCommand(char *command_string);
 int executeReadCommand(char *command_string);

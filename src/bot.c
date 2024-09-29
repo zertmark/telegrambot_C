@@ -203,7 +203,10 @@ void startBot()
     telebot_message_t message;
     telebot_update_type_e update_types[] = {TELEBOT_UPDATE_TYPE_MESSAGE};
     char message_reply[MESSAGE_REPLY_SIZE]= {0};
-    openDatabase("./databases/path.db");   
+    if (!openDatabase("./databases/path.db"))
+    {
+        return;
+    }   
     while (1)
     {
         telebot_update_t *updates;

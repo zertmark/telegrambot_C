@@ -237,23 +237,19 @@ int checkTable(const char* d_table, const char* HEADERS)
         return 0;
     }
 
-    if (bufferRowsCount!=0 && (strcmp(buffer[0], HEADERS)==0) 
-                                                    && checkRows())
-    {
-        return  1;
-    }
-    return 0;
+    return (bufferRowsCount!=0 && (strcmp(buffer[0], HEADERS)==0) 
+                                                    && checkRows());
 }
-int checkDatabase()
+int isDatabaseGood()
 {
     return checkTable("STACK", TABLE_HEADERS_STRING_STACK) && \
             checkTable("FINANCE", TABLE_HEADERS_STRING_FINANCE);
 }
-void createDatabase(char* path_to_database)
+int createDatabase(char* path_to_database)
 {
 
 }
-void openDatabase(char *path_to_database)
+int openDatabase(char *path_to_database)
 {
     sqlite3_initialize();
     if (access(path_to_database, F_OK || W_OK || R_OK) == -1) 
@@ -266,12 +262,12 @@ void openDatabase(char *path_to_database)
     {
         if (dataBase == NULL)
             printf("[ERROR] Not enough memory\nExiting...\n");
-            return;
-        printf("%s\n", sqlite3_errmsg(dataBase));
-        return;
-    }
+            return 0;
 
-    createDatabase(path_to_database);
+        printf("%s\n", sqlite3_errmsg(dataBase));
+        return 0;
+    }
+    return (isDatabaseGood()) || createDatabase(path_to_database);
 }
 static int countRowsResult(sqlite3_stmt *stmt)
 {   
