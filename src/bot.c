@@ -205,6 +205,8 @@ void startBot()
     char message_reply[MESSAGE_REPLY_SIZE]= {0};
     if (!openDatabase("./databases/path.db"))
     {
+    	printf("Couldn't open or create database\n"
+    		   "Exiting...\n");
         return;
     }   
     while (1)

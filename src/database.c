@@ -1,10 +1,12 @@
-#include "database.h"
-#include "pretty_table.h"
 #include <sqlite3.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
+#include "database.h"
+#include "pretty_table.h"
+#include "sql_commands.h"
 
 static sqlite3  *dataBase = {0};
 static char     *errMessage = NULL;
@@ -19,7 +21,9 @@ const char* tables[] = {
     "STACK",
     "FINANCE"
 };
-
+// char* CREATE_STACK_COMMAND = "CREATE TABLE IF NOT EXISTS STACK("
+					 		 // "product_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, remaining INTEGER NOT NULL,cost INTEGER NOT NULL,revenue INTEGER,profit INTEGER,profit_procent REAL,cost_1  INTEGER);";
+	
 static void free_outputList(char** outputList, int iter)
 {
     for (int i = 0; i < iter; i++) 
@@ -86,7 +90,7 @@ static int get_buffer_size(int number_of_lines)
 }
 void freeTable(void** table_ptr, unsigned long long int size)
 {
-    for(int c=0;c<size;c++)
+    for(size_t c=0;c<size;c++)
     {
         free(table_ptr[c]);
     }
@@ -170,13 +174,17 @@ char* revealDatabase(char* dataBaseTableName, int number_of_lines)
     number_of_lines = number_of_lines > bufferRowsCount ? bufferRowsCount: number_of_lines;
     if (!strcmp(dataBaseTableName, "STACK"))
     {
-        return get_string_table(buffer, number_of_lines,NUMBER_OF_HEADERS_STACK, 
-                                                                                        TABLE_HEADERS_STRING_STACK, &buffer_size);
+        return get_string_table(buffer, number_of_lines,
+        								NUMBER_OF_HEADERS_STACK, 
+                                        TABLE_HEADERS_STRING_STACK, 
+                                        &buffer_size);
     }
     if (!strcmp(dataBaseTableName, "FINANCE"))
     {
         return get_string_table(buffer, number_of_lines,
-                                                        NUMBER_OF_HEADERS_FINANCE, TABLE_HEADERS_STRING_FINANCE, &buffer_size);
+               							NUMBER_OF_HEADERS_FINANCE, 
+               							TABLE_HEADERS_STRING_FINANCE, 
+               							&buffer_size);
     }
     freeBuffer();
     return output;
@@ -228,7 +236,7 @@ static int checkRows()
     }
     return 1;
 }
-int checkTable(const char* d_table, const char* HEADERS)
+static int checkTable(const char* d_table, const char* HEADERS)
 {
     char formatted_command [128];
     sprintf(formatted_command, "SELECT * FROM %s;", d_table);
@@ -236,45 +244,55 @@ int checkTable(const char* d_table, const char* HEADERS)
     {
         return 0;
     }
-
-    return (bufferRowsCount!=0 && (strcmp(buffer[0], HEADERS)==0) 
-                                                    && checkRows());
+    return (bufferRowsCount!=0 
+    		&& (strcmp(buffer[0], HEADERS)==0) 
+            && checkRows());
+}
+static int databaseExists(char* path_to_database)
+{
+	short result = sqlite3_open(path_to_database, &dataBase);
+	if (access(path_to_database, F_OK || W_OK || R_OK) == -1) 
+    {
+        printf("[WARNING] Couldn't find existing database at %s\n"
+        		"Using default database path...\n", path_to_database);
+        path_to_database = DEFAULT_PATH;
+    }
+	if (result == SQLITE_ERROR || dataBase == NULL)
+	{
+		if (dataBase == NULL)
+		{
+			printf("[ERROR] Not enough memory\n"
+					"Exiting...\n");
+			return 0;
+		}
+		printf("%s\n", sqlite3_errmsg(dataBase));
+		return 0;
+	}
+	return 1;
 }
 int isDatabaseGood()
 {
-    return checkTable("STACK", TABLE_HEADERS_STRING_STACK) && \
-            checkTable("FINANCE", TABLE_HEADERS_STRING_FINANCE);
+    return checkTable("STACK",TABLE_HEADERS_STRING_STACK)  
+    	   && checkTable("FINANCE", TABLE_HEADERS_STRING_FINANCE);
 }
 int createDatabase(char* path_to_database)
 {
-
+	
+	return 	sqlite3_open(path_to_database, &dataBase)!=SQLITE_ERROR 
+			&& dataBase!=NULL 
+			&& executeWriteCommand(CREATE_STACK_COMMAND) 
+		   	&& executeWriteCommand(CREATE_FINANCE_COMMAND);
 }
 int openDatabase(char *path_to_database)
 {
     sqlite3_initialize();
-    if (access(path_to_database, F_OK || W_OK || R_OK) == -1) 
-    {
-        printf("[WARNING] Couldn't find existing database at databases/test.db\nUsing default database path...\n");
-        path_to_database = DEFAULT_PATH;
-    }
-    short result = sqlite3_open(path_to_database, &dataBase);
-    if (result == SQLITE_ERROR || dataBase == NULL)
-    {
-        if (dataBase == NULL)
-            printf("[ERROR] Not enough memory\nExiting...\n");
-            return 0;
-
-        printf("%s\n", sqlite3_errmsg(dataBase));
-        return 0;
-    }
-    return (isDatabaseGood()) || createDatabase(path_to_database);
+    return ( (databaseExists(path_to_database) && isDatabaseGood() ) 
+    		|| createDatabase(path_to_database));
 }
 static int countRowsResult(sqlite3_stmt *stmt)
 {   
     sqlite3_reset(stmt);
     int count = 0;
-    
-    //for(count = 0; sqlite3_step(stmt)==SQLITE_ROW; count++);
     while(sqlite3_step(stmt)==SQLITE_ROW)
     {
         count++;
