@@ -175,16 +175,16 @@ char* revealDatabase(char* dataBaseTableName, int number_of_lines)
     if (!strcmp(dataBaseTableName, "STACK"))
     {
         return get_string_table(buffer, number_of_lines,
-        								NUMBER_OF_HEADERS_STACK, 
-                                        TABLE_HEADERS_STRING_STACK, 
-                                        &buffer_size);
+										NUMBER_OF_HEADERS_STACK, 
+										TABLE_HEADERS_STRING_STACK, 
+										&buffer_size);
     }
     if (!strcmp(dataBaseTableName, "FINANCE"))
     {
         return get_string_table(buffer, number_of_lines,
-               							NUMBER_OF_HEADERS_FINANCE, 
-               							TABLE_HEADERS_STRING_FINANCE, 
-               							&buffer_size);
+										NUMBER_OF_HEADERS_FINANCE, 
+										TABLE_HEADERS_STRING_FINANCE, 
+										&buffer_size);
     }
     freeBuffer();
     return output;
