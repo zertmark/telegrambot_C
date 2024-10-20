@@ -2,15 +2,7 @@
 #include "stack.h"
 #include "finance.h"
 #include  "bot.h"
-//typedef enum standTypes
-//{
-//    NONE,
-//    INT,
-//    FLOAT,
-//    STR
-//} types;
-
-typedef struct commandBasic
+typedef struct s_command
 {
     char name[20];
     void (*func_pointer)(void);

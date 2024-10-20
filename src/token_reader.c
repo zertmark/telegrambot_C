@@ -3,7 +3,7 @@ static void read_token_in_term(char* token)
 {
 	/*
 	This function doesn't work properly 
-	Need's to be fixed but i gonna rewrite this project from scratch anyway
+	Need's to be fixed but i gonna rewrite this project from scratch anyway because it's awful
 	*/
 	scanf("%ms", &token);
 	token[TOKEN_LENGHT] = 0;

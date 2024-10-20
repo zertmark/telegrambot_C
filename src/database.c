@@ -11,18 +11,10 @@
 static sqlite3  *dataBase = {0};
 static char     *errMessage = NULL;
 static char     **buffer = NULL;
-static int      bufferRowsCount = 0;
-static int      databaseRowsCount = 0;
+static size_t      bufferRowsCount = 0;
+static size_t     databaseRowsCount = 0;
 static char     *primaryKey = "product_id";
-
-
-//A little hacky
-const char* tables[] = {
-    "STACK",
-    "FINANCE"
-};
-// char* CREATE_STACK_COMMAND = "CREATE TABLE IF NOT EXISTS STACK("
-					 		 // "product_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, remaining INTEGER NOT NULL,cost INTEGER NOT NULL,revenue INTEGER,profit INTEGER,profit_procent REAL,cost_1  INTEGER);";
+static char		formatted_command[512] = {0};
 	
 static void free_outputList(char** outputList, int iter)
 {
@@ -34,7 +26,7 @@ static void free_outputList(char** outputList, int iter)
 }
 char** splitString(char *argsIn, int *listArgsSize, 
                             const char* determinator, 
-                            int maxNumberOfStrings)
+                            size_t maxNumberOfStrings)
 {
     if (argsIn == NULL || determinator == NULL || listArgsSize == NULL) 
     {
@@ -103,7 +95,7 @@ void freeBuffer(void)
         bufferRowsCount = 0;
         return;
     }
-    for(int c=0;c<bufferRowsCount;c++)
+    for(size_t c=0;c<bufferRowsCount;c++)
     {
         free(buffer[c]);
     }
@@ -121,19 +113,8 @@ int fieldsAreNotSQLCommands(char **fieldsList, int sizeList)
     }
     return 1;
 }
-//int setRowInfo(char *dataBaseTableName, int id, char *field, void *new_info, char *format)
-//{
-//    char formatted_command[256] = {0};
-//    if (sqlite3_complete(field) || sqlite3_complete(new_info))
-//    {
-//        return 0;
-//    }
-//    sprintf(formatted_command, "UPDATE %s SET %s = %s WHERE %s = %d;", dataBaseTableName, field, new_info, primaryKey, id);
-//    return executeWriteCommand(formatted_command);
-//}
 int fieldAndRowExist(char *dataBaseTableName, char *field, char *field_data)
 {
-    char formatted_command[256] = {0};
     int output = 0;
     sprintf(formatted_command, "SELECT EXISTS (SELECT 1 FROM %s WHERE %s = %s);", dataBaseTableName, field, field_data);
     if (!executeReadCommand(formatted_command))
@@ -146,23 +127,21 @@ int fieldAndRowExist(char *dataBaseTableName, char *field, char *field_data)
 }
 float getFieldsAverageSum(char *dataBaseTableName, char *field)
 {
-    char formatted_command[128] = {0}; 
     float sum = 0.0;
     sprintf(formatted_command, "SELECT %s FROM %s;", field, dataBaseTableName);
     if (!executeReadCommand(formatted_command))
     {
         return 0.0;
     }
-    for(int c=0;c<bufferRowsCount;c++)
+    for(size_t c=0;c<bufferRowsCount;c++)
     {
         sum+=atoi(buffer[c]);
     }
     freeBuffer();
     return sum/bufferRowsCount;
 }
-char* revealDatabase(char* dataBaseTableName, int number_of_lines)
+char* revealDatabase(char* dataBaseTableName, size_t number_of_lines)
 {
-    char formatted_command[128] = {0};
     char *output = NULL;
     size_t buffer_size = 0;
     sprintf(formatted_command, "SELECT * FROM %s;", dataBaseTableName);
@@ -170,7 +149,7 @@ char* revealDatabase(char* dataBaseTableName, int number_of_lines)
     {
         return output;
     }
-    printBuffer();
+    // printBuffer();
     number_of_lines = number_of_lines > bufferRowsCount ? bufferRowsCount: number_of_lines;
     if (!strcmp(dataBaseTableName, "STACK"))
     {
@@ -191,14 +170,13 @@ char* revealDatabase(char* dataBaseTableName, int number_of_lines)
 }
 float getFieldsSum(char* dataBaseTableName, char* field)
 {
-    char formatted_command[128] = {0}; 
     float sum = 0.0f;
     sprintf(formatted_command, "SELECT %s FROM %s;", field, dataBaseTableName);
     if (!executeReadCommand(formatted_command))
     {
         return 0.0f;
     }
-    for(int c=0;c<bufferRowsCount;c++)
+    for(size_t c=0;c<bufferRowsCount;c++)
     {
         sum+=atof(buffer[c]);
     }
@@ -207,7 +185,6 @@ float getFieldsSum(char* dataBaseTableName, char* field)
 }
 int updateDatabaseRowsCount(char *dataBaseTableName)
 {
-    char formatted_command[128] = {0};   
     sprintf(formatted_command, "SELECT %s FROM %s;", primaryKey, dataBaseTableName);
     if(!executeReadCommand(formatted_command))
     {
@@ -227,7 +204,7 @@ size_t getBufferRowsCount(void)
 }
 static int checkRows()
 {
-    for (int c=0;c<bufferRowsCount;c++)
+    for (size_t c=0;c<bufferRowsCount;c++)
     {
         if (strstr(buffer[c], "NULL")!=NULL)
         {
@@ -238,7 +215,6 @@ static int checkRows()
 }
 static int checkTable(const char* d_table, const char* HEADERS)
 {
-    char formatted_command [128];
     sprintf(formatted_command, "SELECT * FROM %s;", d_table);
     if (!executeReadCommand(formatted_command))
     {
@@ -324,7 +300,7 @@ void closeDatabase(void)
 }
 void printBuffer(void)
 {
-    for(int c=0;c<bufferRowsCount;c++)
+    for(size_t c=0;c<bufferRowsCount;c++)
     {
         printf("%s \n", buffer[c]);
     }

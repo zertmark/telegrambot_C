@@ -1,14 +1,25 @@
 BINARY_FILE = FinanceBot.bin
+CC= gcc
+CFLAGS = -O3 -I include -lcurl -ljson-c -lsqlite3 -lz -lm
+OBJDIR
+src_dir = ./src/
+objects = bot.o database.o excel.o finance.o main.o out pretty_table.o stack.o token_reader.o
+build_dir = $(addprefix $(OBJDIR)/,$(objects)) 
 
-build:
-	rm -f src/log.txt
-	sudo gcc -g -O3 -Iinclude src/* -lcurl -ljson-c -lsqlite3 -lz -lm -o $(BINARY_FILE)
+.PHONY: clean
 
-run:
-	./$(BINARY_FILE)
+$(BINARY_FILE): build
 
-build_and_run: build run
-
+build: $(objects) # excel pretty_table bot	 
+# build:
+	# rm -f src/log.txt
+	# sudo gcc -g -O3 -Iinclude src/* -lcurl -ljson-c -lsqlite3 -lz -lm -o $(BINARY_FILE)
+# 
+# run:
+	# ./$(BINARY_FILE)
+# 
+# build_and_run: build run
+# 
 clean:
 	rm -f src/log.txt
 	rm -f log.txt

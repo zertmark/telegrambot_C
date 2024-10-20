@@ -1,8 +1,8 @@
 #include "pretty_table.h"
-#include "database.h"
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+
 void clean_table(char*** table, size_t rows_count, size_t columns_count)
 {
     if (table==NULL)

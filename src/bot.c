@@ -55,7 +55,9 @@ static void free_args(char** args, int argsCount)
     for (int c=0;c<argsCount;c++)
     {
         if (args[c]!=NULL)
+        {
             free(args[c]);
+        }
     }
     free(args);
 }
@@ -240,7 +242,9 @@ void startBot()
 	   	        printf("[ERROR] Couldn't execute command or reply is too big\n");
 		        offset = updates[index].update_id + 1;
 		        if (reply != NULL)
+		        {
 		    	    free(reply);
+		    	}
 	        	continue;
 	        }
             if (!strcmp(reply, "Stop") && offset!=-1)

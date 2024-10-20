@@ -75,8 +75,9 @@ int deteleProduct(int product_id)
     return executeWriteCommand(formatted_command);
 }
 char* getMostProfitableProduct(void)
-{ 
-    if(!executeReadCommand("SELECT product_id, name, remaining, cost, max(revenue), profit, profit_procent, cost_1 FROM STACK;"))
+{
+    if(!executeReadCommand("SELECT product_id, name, remaining, cost, max(revenue)," 
+    						"profit, profit_procent, cost_1 FROM STACK;"))
     {
         return NULL;
     }
