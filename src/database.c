@@ -227,12 +227,14 @@ static int checkTable(const char* d_table, const char* HEADERS)
 static int databaseExists(char* path_to_database)
 {
 	short result = sqlite3_open(path_to_database, &dataBase);
+	printf("Path:%s\n", path_to_database);
 	if (access(path_to_database, F_OK || W_OK || R_OK) == -1) 
     {
         printf("[WARNING] Couldn't find existing database at %s\n"
         		"Using default database path...\n", path_to_database);
         path_to_database = DEFAULT_PATH;
     }
+    printf("Path:%s\n", path_to_database);
 	if (result == SQLITE_ERROR || dataBase == NULL)
 	{
 		if (dataBase == NULL)
@@ -244,6 +246,7 @@ static int databaseExists(char* path_to_database)
 		printf("%s\n", sqlite3_errmsg(dataBase));
 		return 0;
 	}
+	printf("database exists::%s\n", path_to_database);
 	return 1;
 }
 int isDatabaseGood()
@@ -253,7 +256,7 @@ int isDatabaseGood()
 }
 int createDatabase(char* path_to_database)
 {
-	
+	printf("Creating database::%s\n", path_to_database);
 	return 	sqlite3_open(path_to_database, &dataBase)!=SQLITE_ERROR 
 			&& dataBase!=NULL 
 			&& executeWriteCommand(CREATE_STACK_COMMAND) 
