@@ -1,0 +1,7 @@
+*.bin
+*.xlsx
+.vscode/
+.token
+.ccls-cache/*
+log.txt
+src/log.txt
