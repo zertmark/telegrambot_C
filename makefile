@@ -16,11 +16,10 @@ BINARY_FILE = FinanceBot.bin
 # 
 # 
 # src/main.c:
-	# $(CC) -c -O3 src/main.c -o build/main.o
+# $(CC) -c -O3 src/main.c -o build/main.o
 # 
 # src/bot.c:
-	# $(CC) -c -O3 src/libtelebot_static.a -Iinclude src/bot.c -o build/bot.o
-	# 
+# $(CC) -c -O3 src/libtelebot_static.a -Iinclude src/bot.c -o build/bot.o 
 # src/token_reader.c:
 	# $(CC) -c -O3 src/token_reader.c -o build/token_reader.o
 build: build_d
