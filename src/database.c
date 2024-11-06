@@ -8,13 +8,13 @@
 #include "pretty_table.h"
 #include "sql_commands.h"
 
-static sqlite3  *dataBase = {0};
-static char     *errMessage = NULL;
-static char     **buffer = NULL;
-static size_t      bufferRowsCount = 0;
-static size_t     databaseRowsCount = 0;
-static char     *primaryKey = "product_id";
-static char		formatted_command[512] = {0};
+static sqlite3*  dataBase = {0};
+static char*     errMessage = NULL;
+static char**    buffer = NULL;
+static size_t    bufferRowsCount = 0;
+static size_t    databaseRowsCount = 0;
+static char*     primaryKey = "product_id";
+static char		 formatted_command[512] = {0};
 	
 static void free_outputList(char** outputList, int iter)
 {
@@ -147,7 +147,7 @@ char* revealDatabase(char* dataBaseTableName, size_t number_of_lines)
     sprintf(formatted_command, "SELECT * FROM %s;", dataBaseTableName);
     if(!executeReadCommand(formatted_command))
     {
-        return output;
+        return "Error\n";
     }
     // printBuffer();
     number_of_lines = number_of_lines > bufferRowsCount ? bufferRowsCount: number_of_lines;
@@ -165,7 +165,7 @@ char* revealDatabase(char* dataBaseTableName, size_t number_of_lines)
 										TABLE_HEADERS_STRING_FINANCE, 
 										&buffer_size);
     }
-    freeBuffer();
+    //freeBuffer();
     return output;
 }
 float getFieldsSum(char* dataBaseTableName, char* field)
@@ -218,45 +218,31 @@ static int checkTable(const char* d_table, const char* HEADERS)
     sprintf(formatted_command, "SELECT * FROM %s;", d_table);
     if (!executeReadCommand(formatted_command))
     {
+        printf("[ERROR] Couldn't execute ReadCommand");
         return 0;
     }
-    return (bufferRowsCount!=0 
-    		&& (strcmp(buffer[0], HEADERS)==0) 
+    return (bufferRowsCount!=0
             && checkRows());
 }
 static int databaseExists(char* path_to_database)
 {
-	short result = sqlite3_open(path_to_database, &dataBase);
-	printf("Path:%s\n", path_to_database);
-	if (access(path_to_database, F_OK || W_OK || R_OK) == -1) 
+	if (access(path_to_database, F_OK | W_OK | R_OK) == -1) 
     {
         printf("[WARNING] Couldn't find existing database at %s\n"
-        		"Using default database path...\n", path_to_database);
-        path_to_database = DEFAULT_PATH;
+        		"Using default database path: %s\n", path_to_database, 
+                                                        DEFAULT_PATH);
+        return 0;
     }
-    printf("Path:%s\n", path_to_database);
-	if (result == SQLITE_ERROR || dataBase == NULL)
-	{
-		if (dataBase == NULL)
-		{
-			printf("[ERROR] Not enough memory\n"
-					"Exiting...\n");
-			return 0;
-		}
-		printf("%s\n", sqlite3_errmsg(dataBase));
-		return 0;
-	}
-	printf("database exists::%s\n", path_to_database);
-	return 1;
+    return 1;
 }
 int isDatabaseGood()
-{
-    return checkTable("STACK",TABLE_HEADERS_STRING_STACK)  
-    	   && checkTable("FINANCE", TABLE_HEADERS_STRING_FINANCE);
+{  
+    return  checkTable("STACK",TABLE_HEADERS_STRING_STACK)
+            && checkTable("FINANCE", TABLE_HEADERS_STRING_FINANCE);
 }
 int createDatabase(char* path_to_database)
 {
-	printf("Creating database::%s\n", path_to_database);
+	printf("Creating database: %s\n", path_to_database);
 	return 	sqlite3_open(path_to_database, &dataBase)!=SQLITE_ERROR 
 			&& dataBase!=NULL 
 			&& executeWriteCommand(CREATE_STACK_COMMAND) 
@@ -265,8 +251,21 @@ int createDatabase(char* path_to_database)
 int openDatabase(char *path_to_database)
 {
     sqlite3_initialize();
-    return ( (databaseExists(path_to_database) && isDatabaseGood() ) 
-    		|| createDatabase(path_to_database));
+    short result = 0;
+    if (!databaseExists(path_to_database) 
+        || (result = sqlite3_open(path_to_database, &dataBase) 
+                                                        && isDatabaseGood()))
+    {
+        return createDatabase(DEFAULT_PATH);
+    }
+
+    if(result==SQLITE_ERROR)
+    {
+        printf("[SQLITE3 ERROR]\n%s\n", sqlite3_errmsg(dataBase));
+        return 0;
+    }
+
+    return dataBase != NULL;
 }
 static int countRowsResult(sqlite3_stmt *stmt)
 {   

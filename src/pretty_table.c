@@ -34,7 +34,7 @@ void print_table(char*** table, size_t rows_count, size_t columns_count)
         printf("\n");
     }
 }
-static size_t get_table_size(size_t rows_count, size_t column_count, int* column_max)
+static size_t get_table_size(size_t rows_count, size_t column_count, size_t* column_max)
 {
     size_t output = 0;
     for(size_t c=0;c<column_count;c++)
@@ -43,7 +43,7 @@ static size_t get_table_size(size_t rows_count, size_t column_count, int* column
     }
     return output*rows_count;
 }
-static void append_spaces_to_table(char*** table, int* column_max, size_t rows_count, size_t columns_count)
+static void append_spaces_to_table(char*** table, size_t* column_max, size_t rows_count, size_t columns_count)
 {
     for(size_t c=0;c<rows_count;c++)
     {
@@ -59,7 +59,7 @@ static void append_spaces_to_table(char*** table, int* column_max, size_t rows_c
         }
     }
 }
-static void calculate_columns_max(char*** table,int* column_max, 
+static void calculate_columns_max(char*** table,size_t* column_max, 
                         size_t rows_count, size_t columns_count)
 {
     for(size_t c=0;c<rows_count;c++)
@@ -68,19 +68,20 @@ static void calculate_columns_max(char*** table,int* column_max,
         {
             if (table[c][j]==NULL)
             {
+                printf("Table[%ld][%ld] is NULL\n", c,j);
                 continue;
             }
             column_max[j] = max(column_max[j], strlen(table[c][j])+1);
+            printf("Column max: %ld", column_max[j]);
         }
     }
 }
-static char*** create_table (char** string, int* column_max, int size,
+static char*** create_table (char** string, size_t* column_max, int size,
                     size_t rows_count, size_t columns_count, char* headers)
 {
     char*** table = calloc(rows_count, sizeof(char**));
     printf("Adding headers\n");
-    table[0] = splitString(headers, &size, 
-                "\t", columns_count);
+    table[0] = splitString(headers, &size,"\t", columns_count);
     
     for(size_t c=1;c<rows_count;c++)
     {
@@ -94,28 +95,34 @@ static char*** create_table (char** string, int* column_max, int size,
     calculate_columns_max (table, column_max,  rows_count,  columns_count);
     append_spaces_to_table(table, column_max,  rows_count,  columns_count);
 
-    free(column_max);
-    
     return table;
 }
 char*** get_table(char** string, size_t rows_count, size_t columns_count, char* headers)
 {
-    int* column_max = calloc(columns_count, sizeof(int));
+    size_t* column_max = calloc(columns_count, sizeof(int));
     char*** table = create_table(string, column_max, 0, rows_count, columns_count, headers);
-    
+    free(column_max);
     return table;
 }
 char* get_string_table(char** string, size_t rows_count, size_t columns_count, char* headers, size_t* len)
 {
     rows_count+=1;
+
     printf("Generating column max...\n");
-    int*    column_max = calloc(columns_count, sizeof(int));
+    size_t*    column_max = calloc(columns_count, sizeof(size_t));
+    memset(column_max, 0, columns_count);
     printf("Generating table...\n");
     char*** table = create_table(string,column_max, 0, rows_count, columns_count, headers);
     printf("Getting table size...\n");
-    size_t  table_size = get_table_size(rows_count, columns_count, column_max)+strlen(headers)+1+8;
+    printf("Rows: %ld, Columns: %ld\nStrlen: %d\n", rows_count, columns_count, strlen(headers));
+    size_t  table_size = get_table_size(rows_count, columns_count, column_max)+strlen(headers)+1;
+    printf("Table size: %ld\n", (unsigned long int) table_size);
     printf("Generating output\n");
     char*   output = calloc(table_size,sizeof(char));
+    if(output==NULL)
+    {
+        printf("FUCK\n");
+    }
     strncpy(output, "```\n", 4);
     for(size_t c=0;c<rows_count;c++)
     {
@@ -125,10 +132,10 @@ char* get_string_table(char** string, size_t rows_count, size_t columns_count, c
         }
         strcat(output, "\n");
     }
-    printf("Table size: %d\n", (int) table_size);
     strcat(output, "```\n");
     *len = table_size;
     output[table_size] = 0;
     clean_table(table, rows_count, columns_count);
+    free(column_max);
     return output;
 }

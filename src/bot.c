@@ -5,6 +5,7 @@
 #include <string.h>
 #include <threads.h>
 #include <time.h>
+#include <sqlite3.h>
 
 #define SIZE_OF_ARRAY(array) (sizeof(array) / sizeof(array[0]))
 #define MESSAGE_REPLY_SIZE 4096
@@ -93,6 +94,7 @@ void stopBot()
     telebot_destroy(handle);
     free(helpMessage);
     closeDatabase();
+    sqlite3_shutdown();
     exit(0);
 }
 char* getReplyFromDatabase(char *text)
@@ -205,7 +207,8 @@ void startBot()
     telebot_message_t message;
     telebot_update_type_e update_types[] = {TELEBOT_UPDATE_TYPE_MESSAGE};
     char message_reply[MESSAGE_REPLY_SIZE]= {0};
-    if (!openDatabase("./databases/path.db"))
+    char *reply = NULL;
+    if (!openDatabase("./databases/test.db"))
     {
     	printf("Couldn't open or create database\n"
     		   "Exiting...\n");
@@ -222,22 +225,26 @@ void startBot()
 	    }
         for (index = 0; index < count; index++)
         {
+            
             if(updates[index].update_type != TELEBOT_UPDATE_TYPE_MESSAGE)
             {
                 offset = updates[index].update_id + 1;
                 continue;
             }
+            
             char *reply = NULL;
             message = updates[index].message;
+            
             if (!message.text)
             {
                 offset = updates[index].update_id + 1;
                 printf("ERROR\n");
                 continue;
             }
+            
             reply = getReplyFromDatabase(message.text);
-
-	        if (reply == NULL || strlen(reply) > MESSAGE_REPLY_SIZE)
+	        
+            if (reply == NULL || strlen(reply) > MESSAGE_REPLY_SIZE)
 	        {
 	   	        printf("[ERROR] Couldn't execute command or reply is too big\n");
 		        offset = updates[index].update_id + 1;
@@ -251,13 +258,15 @@ void startBot()
             {
                 printf("Stopping\n");
                 error_status = telebot_send_message(handle, message.chat->id,"Stopping bot\n", "Markdown", false, false, updates[index].message.message_id, "");
-                telebot_put_updates(updates, count);
+                // telebot_put_updates(updates, count);
                 stopBot();
             }
+
             printf("Got right response...\nSending reply message...\n");
             strncpy(message_reply, reply, strlen(reply));
 	        printf("%s\n", message_reply);
             error_status = telebot_send_message(handle, message.chat->id, message_reply, "Markdown", false, false, updates[index].message.message_id, "");
+            
             if (error_status != TELEBOT_ERROR_NONE)
             {
                 printf("Failed to send message to %s: %d \n", message.from->first_name, error_status);
