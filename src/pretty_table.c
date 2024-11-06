@@ -135,7 +135,9 @@ char* get_string_table(char** string, size_t rows_count, size_t columns_count, c
     strcat(output, "```\n");
     *len = table_size;
     output[table_size] = 0;
+    printf("Cleaning table...\n");
     clean_table(table, rows_count, columns_count);
+    printf("Table is cleaned\nFree column_max...\n");
     free(column_max);
     return output;
 }

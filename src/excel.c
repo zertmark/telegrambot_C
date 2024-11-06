@@ -1,4 +1,4 @@
-#include "excel.h"
+#include "xlsxwriter.h"
 #include "database.h"
 void writeColumnNamesToWorksheet(char **columnNames, size_t numberOfColumns, 
                                                 lxw_worksheet *worksheet)

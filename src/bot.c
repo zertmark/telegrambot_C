@@ -59,7 +59,9 @@ static void free_args(char** args, int argsCount)
         {
             free(args[c]);
         }
+
     }
+    printf("OK free_args\n");
     free(args);
 }
 char* getHelp()
@@ -198,7 +200,9 @@ char* getReplyFromDatabase(char *text)
 	        strncpy(c_output, "Didn't found command", INVALID_COMMAND_SIZE);
             break;
     }
+    printf("OK commands\n");
     free_args(args, argsCount);
+    printf("OK free_args again\n");
     return c_output;
 }
 void startBot()
@@ -217,7 +221,7 @@ void startBot()
     while (1)
     {
         telebot_update_t *updates;
-        error_status = telebot_get_updates(handle, offset,100, 0, update_types, 0, &updates, &count);
+        error_status = telebot_get_updates(handle, offset,100, 15, update_types, 0, &updates, &count);
         if (error_status != TELEBOT_ERROR_NONE && error_status != TELEBOT_ERROR_OPERATION_FAILED)
         {
             printf("Error occured: %d\n", error_status);
@@ -247,32 +251,30 @@ void startBot()
             if (reply == NULL || strlen(reply) > MESSAGE_REPLY_SIZE)
 	        {
 	   	        printf("[ERROR] Couldn't execute command or reply is too big\n");
+                error_status = telebot_send_message(handle, message.chat->id,"Couldn't execute command\n", "Markdown", false, false,0, "");
 		        offset = updates[index].update_id + 1;
-		        if (reply != NULL)
-		        {
-		    	    free(reply);
-		    	}
 	        	continue;
 	        }
             if (!strcmp(reply, "Stop") && offset!=-1)
             {
                 printf("Stopping\n");
-                error_status = telebot_send_message(handle, message.chat->id,"Stopping bot\n", "Markdown", false, false, updates[index].message.message_id, "");
+                error_status = telebot_send_message(handle, message.chat->id,"Stopping bot\n", "Markdown", false, false,0, "");
                 // telebot_put_updates(updates, count);
                 stopBot();
             }
 
             printf("Got right response...\nSending reply message...\n");
-            strncpy(message_reply, reply, strlen(reply));
+            strncpy(message_reply, reply, strlen(reply)+1);
 	        printf("%s\n", message_reply);
-            error_status = telebot_send_message(handle, message.chat->id, message_reply, "Markdown", false, false, updates[index].message.message_id, "");
-            
+            printf("Sending reply message...\n");
+            error_status = telebot_send_message(handle, message.chat->id, message_reply, "Markdown", false, false,0, "");
             if (error_status != TELEBOT_ERROR_NONE)
             {
-                printf("Failed to send message to %s: %d \n", message.from->first_name, error_status);
+                printf("Failed to send message: %d", error_status);
             }
             offset = updates[index].update_id + 1;
-	        free(reply);
+            printf("%d\t%d\t%d\n", offset, index, count);
+	        // free(reply);
         }
         telebot_put_updates(updates, count);
         memset(message_reply, 0, 4096);
